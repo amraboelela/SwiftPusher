@@ -5,6 +5,9 @@
 //
 //  Copyright (c) 2012 noodlewerk. All rights reserved.
 //
+//  Modified by: Amr Aboelela on 3/13/17.
+//
+
 import Foundation
 
 /** Serializes notification objects and pushes them to the APNs.
@@ -19,7 +22,9 @@ import Foundation
  
  Make sure to read Apple's documentation on *Apple Push Notification Service* and *Provider Communication*.
  */
-class NWPusher: NSObject {
+class NWPusher {
+    
+    /*
     /** @name Properties */
     /** The SSL connection through which all notifications are pushed. */
     var connection: NWSSLConnection!
@@ -179,15 +184,18 @@ class NWPusher: NSObject {
 
     func connect(withPKCS12Data data: Data, password: String, error: Error?) -> Bool {
         return try? self.connect(withPKCS12Data: data, password: password, environment: NWEnvironmentAuto)!
-    }
+    }*/
 
 // MARK: - Connecting
 // MARK: - Pushing payload
 // MARK: - Reading failed
 // MARK: - Deprecated
+    
 }
-let NWSandboxPushHost: String = "gateway.sandbox.push.apple.com"
+
+/*let NWSandboxPushHost: String = "gateway.sandbox.push.apple.com"
 
 let NWPushHost: String = "gateway.push.apple.com"
 
 let NWPushPort: Int = 2195
+ */

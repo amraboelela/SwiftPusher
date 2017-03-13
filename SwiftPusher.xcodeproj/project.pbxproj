@@ -8,17 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0CF899B91E77476600AEB5E0 /* SwiftPusher.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CF899AF1E77476500AEB5E0 /* SwiftPusher.framework */; };
-		0CF899D71E77485F00AEB5E0 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899C91E77485F00AEB5E0 /* LICENSE.txt */; };
-		0CF899D81E77485F00AEB5E0 /* LinuxMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899CB1E77485F00AEB5E0 /* LinuxMain.swift */; };
 		0CF899D91E77485F00AEB5E0 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899CD1E77485F00AEB5E0 /* Info.plist */; };
-		0CF899DA1E77485F00AEB5E0 /* SwiftPusherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899CE1E77485F00AEB5E0 /* SwiftPusherTests.swift */; };
-		0CF899DB1E77485F00AEB5E0 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899D01E77485F00AEB5E0 /* Info.plist */; };
-		0CF899DC1E77485F00AEB5E0 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899D11E77485F00AEB5E0 /* README.md */; };
-		0CF899DD1E77485F00AEB5E0 /* tag in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899D21E77485F00AEB5E0 /* tag */; };
-		0CF899DE1E77485F00AEB5E0 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899D31E77485F00AEB5E0 /* Package.swift */; };
-		0CF899DF1E77485F00AEB5E0 /* test in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899D41E77485F00AEB5E0 /* test */; };
-		0CF899E01E77485F00AEB5E0 /* clean in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899D51E77485F00AEB5E0 /* clean */; };
-		0CF899E11E77485F00AEB5E0 /* build in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899D61E77485F00AEB5E0 /* build */; };
+		0CF899EB1E774A9200AEB5E0 /* NWPusher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899E41E774A9200AEB5E0 /* NWPusher.swift */; };
+		0CF899F11E774AC400AEB5E0 /* SwiftPusherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899CE1E77485F00AEB5E0 /* SwiftPusherTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +37,13 @@
 		0CF899D41E77485F00AEB5E0 /* test */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test; sourceTree = "<group>"; };
 		0CF899D51E77485F00AEB5E0 /* clean */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = clean; sourceTree = "<group>"; };
 		0CF899D61E77485F00AEB5E0 /* build */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build; sourceTree = "<group>"; };
+		0CF899E21E774A9200AEB5E0 /* NWHub.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NWHub.swift; sourceTree = "<group>"; };
+		0CF899E31E774A9200AEB5E0 /* NWNotification.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NWNotification.swift; sourceTree = "<group>"; };
+		0CF899E41E774A9200AEB5E0 /* NWPusher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NWPusher.swift; sourceTree = "<group>"; };
+		0CF899E51E774A9200AEB5E0 /* NWPushFeedback.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NWPushFeedback.swift; sourceTree = "<group>"; };
+		0CF899E61E774A9200AEB5E0 /* NWSecTools.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NWSecTools.swift; sourceTree = "<group>"; };
+		0CF899E71E774A9200AEB5E0 /* NWSSLConnection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NWSSLConnection.swift; sourceTree = "<group>"; };
+		0CF899E81E774A9200AEB5E0 /* NWType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NWType.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +112,13 @@
 		0CF899CF1E77485F00AEB5E0 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				0CF899E21E774A9200AEB5E0 /* NWHub.swift */,
+				0CF899E31E774A9200AEB5E0 /* NWNotification.swift */,
+				0CF899E41E774A9200AEB5E0 /* NWPusher.swift */,
+				0CF899E51E774A9200AEB5E0 /* NWPushFeedback.swift */,
+				0CF899E61E774A9200AEB5E0 /* NWSecTools.swift */,
+				0CF899E71E774A9200AEB5E0 /* NWSSLConnection.swift */,
+				0CF899E81E774A9200AEB5E0 /* NWType.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -210,13 +216,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CF899E01E77485F00AEB5E0 /* clean in Resources */,
 				0CF899D91E77485F00AEB5E0 /* Info.plist in Resources */,
-				0CF899DF1E77485F00AEB5E0 /* test in Resources */,
-				0CF899D71E77485F00AEB5E0 /* LICENSE.txt in Resources */,
-				0CF899DB1E77485F00AEB5E0 /* Info.plist in Resources */,
-				0CF899DD1E77485F00AEB5E0 /* tag in Resources */,
-				0CF899E11E77485F00AEB5E0 /* build in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -234,10 +234,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CF899DE1E77485F00AEB5E0 /* Package.swift in Sources */,
-				0CF899DC1E77485F00AEB5E0 /* README.md in Sources */,
-				0CF899DA1E77485F00AEB5E0 /* SwiftPusherTests.swift in Sources */,
-				0CF899D81E77485F00AEB5E0 /* LinuxMain.swift in Sources */,
+				0CF899EB1E774A9200AEB5E0 /* NWPusher.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CF899F11E774AC400AEB5E0 /* SwiftPusherTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,7 +365,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = SwiftPusher/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amr.SwiftPusher;
@@ -387,7 +385,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = SwiftPusher/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amr.SwiftPusher;
