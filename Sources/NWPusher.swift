@@ -29,14 +29,16 @@ class NWPusher {
     /** The SSL connection through which all notifications are pushed. */
     var connection: NWSSLConnection!
     /** @name Initialization */
+    
     /** Creates, connects and returns a pusher object based on the provided identity. */
-
-    class func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) -> Self {
+    class func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) throws -> NWPusher? {
         var pusher = NWPusher()
-        return identity && (try? pusher.connect(withIdentity: identity, environment: environment)) ? pusher : nil!
+        if identity && try pusher.connect(withIdentity: identity, environment: environment) {
+            return pusher
+        }
     }
+    
     /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
-
     class func connect(withPKCS12Data data: Data, password: String, environment: NWEnvironment, error: Error?) -> Self {
         var pusher = NWPusher()
         return data && (try? pusher.connect(withPKCS12Data: data, password: password, environment: environment)) ? pusher : nil!
@@ -62,16 +64,15 @@ class NWPusher {
         return true
     }
     /** Connect with the APNs using the identity from PKCS #12 data. */
-
-    func connect(withPKCS12Data data: Data, password: String, environment: NWEnvironment, error: Error?) -> Bool {
-        var identity: NWIdentityRef? = try? NWSecTools.identity(withPKCS12Data: data, password: password)
-        if identity == nil {
-            return false
-        }
-        return try? self.connect(withIdentity: identity, environment: environment)!
+*/
+    
+    func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
+        let identity = try NWSecTools.identity(withPKCS12Data: data, password: password)
+        return try self.connect(withIdentity: identity, isSandbox: isSandbox)
     }
+    
+    /*
     /** Reconnect using the same identity, disconnects if necessary. */
-
     func reconnect() throws {
         if !self.connection {
             return try? NWErrorUtil.noWithErrorCode(kNWErrorPushNotConnected)!
@@ -174,10 +175,10 @@ class NWPusher {
         return try? self.connect(withIdentity: identity, environment: NWEnvironmentAuto)!
     }
 
-    class func connect(withPKCS12Data data: Data, password: String, error: Error?) -> Self {
-        return try? self.connect(withPKCS12Data: data, password: password, environment: NWEnvironmentAuto)!
+    class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
+        return try self.connect(withPKCS12Data: data, password: password, environment: NWEnvironmentAuto)
     }
-
+    
     func connect(withIdentity identity: NWIdentityRef, error: Error?) -> Bool {
         return try? self.connect(withIdentity: identity, environment: NWEnvironmentAuto)!
     }

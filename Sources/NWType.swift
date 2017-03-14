@@ -5,7 +5,12 @@
 //
 //  Copyright (c) 2014 noodlewerk. All rights reserved.
 //
+//  Modified by: Amr Aboelela on 3/13/17.
+//
+
 import Foundation
+
+/*
 /** The current and past data formats supported by APNs. For more information see Apple documentation under 'Legacy Information'. */
 enum NWNotificationType : Int {
     /** The 'Simple Notification Format'. The oldest format, simply concatenates the device token and payload. */
@@ -14,146 +19,153 @@ enum NWNotificationType : Int {
     case kNWNotificationType1 = 1
     /** The 'Binary Interface and Notification Format'. The latest, more extensible format that allows for attributes like priority. */
     case kNWNotificationType2 = 2
-}
+}*/
 
 /** An ARC-friendly replacement of SecIdentityRef. */
 typealias NWIdentityRef = Any
+
+/*
 /** An ARC-friendly replacement of SecCertificateRef. */
 typealias NWCertificateRef = Any
 /** An ARC-friendly replacement of SecKeyRef. */
 typealias NWKeyRef = Any
 /** List all error codes. */
-enum NWError : Int {
+*/
+
+enum NWError: Swift.Error {
     /** No error, that's odd. */
-    case kNWErrorNone = 0
+    case none
     /** APN processing error. */
-    case kNWErrorAPNProcessing = -1
+    case processingError
     /** APN missing device token. */
-    case kNWErrorAPNMissingDeviceToken = -2
+    case missingDeviceToken
     /** APN missing topic. */
-    case kNWErrorAPNMissingTopic = -3
+    case missingTopic
     /** APN missing payload. */
-    case kNWErrorAPNMissingPayload = -4
+    case missingPayload
     /** APN invalid token size. */
-    case kNWErrorAPNInvalidTokenSize = -5
+    case invalidTokenSize
     /** APN invalid topic size. */
-    case kNWErrorAPNInvalidTopicSize = -6
+    case invalidTopicSize
     /** APN invalid payload size. */
-    case kNWErrorAPNInvalidPayloadSize = -7
+    case invalidPayloadSize
     /** APN invalid token. */
-    case kNWErrorAPNInvalidTokenContent = -8
+    case invalidTokenContent
     /** APN unknown reason. */
-    case kNWErrorAPNUnknownReason = -9
+    case unknownReason
     /** APN shutdown. */
-    case kNWErrorAPNShutdown = -10
+    case serverShutdown
     /** APN unknown error code. */
-    case kNWErrorAPNUnknownErrorCode = -11
+    case unknownError
     /** Push response command unknown. */
-    case kNWErrorPushResponseCommand = -107
+    case responseCommandUnkown
     /** Push reconnect requires connection. */
-    case kNWErrorPushNotConnected = -111
+    case reconnectRequiresConnection
     /** Push not fully sent. */
-    case kNWErrorPushWriteFail = -112
+    case pushWriteFail
     /** Feedback data length unexpected. */
-    case kNWErrorFeedbackLength = -108
+    case feedbackLengthError
     /** Feedback token length unexpected. */
-    case kNWErrorFeedbackTokenLength = -109
+    case feedbackTokenLengthError
     /** Socket cannot be created. */
-    case kNWErrorSocketCreate = -222
+    case socketCreationError
     /** Socket connecting failed. */
-    case kNWErrorSocketConnect = -201
+    case socketConnectionFailed
     /** Socket host cannot be resolved. */
-    case kNWErrorSocketResolveHostName = -219
+    case socketHostCannotBeResolved
     /** Socket file control failed. */
-    case kNWErrorSocketFileControl = -220
+    case socketFileControlFailed
     /** Socket options cannot be set. */
-    case kNWErrorSocketOptions = -221
+    case socketOptionsCannotBeSet
     /** SSL connection cannot be set. */
-    case kNWErrorSSLConnection = -204
+    case SSLConnectionCannotBeSet
     /** SSL context cannot be created. */
-    case kNWErrorSSLContext = -202
+    case SSLContextCannotBeCreated
     /** SSL callbacks cannot be set. */
-    case kNWErrorSSLIOFuncs = -203
+    case SSLCallbacksCannotBeSet
     /** SSL peer domain name cannot be set. */
-    case kNWErrorSSLPeerDomainName = -205
+    case SSLPeerDomainName
     /** SSL certificate cannot be set. */
-    case kNWErrorSSLCertificate = -206
+    case SSLCertificate
     /** SSL handshake dropped by server. */
-    case kNWErrorSSLDroppedByServer = -207
+    case SSLDroppedByServer
     /** SSL handshake authentication failed. */
-    case kNWErrorSSLAuthFailed = -208
+    case SSLAuthFailed
     /** SSL handshake failed. */
-    case kNWErrorSSLHandshakeFail = -209
+    case SSLHandshakeFail
     /** SSL handshake root not a known anchor. */
-    case kNWErrorSSLHandshakeUnknownRootCert = -223
+    case SSLHandshakeUnknownRootCert
     /** SSL handshake chain not verifiable to root. */
-    case kNWErrorSSLHandshakeNoRootCert = -224
+    case SSLHandshakeNoRootCert
     /** SSL handshake expired certificates. */
-    case kNWErrorSSLHandshakeCertExpired = -225
+    case SSLHandshakeCertExpired
     /** SSL handshake invalid certificate chain. */
-    case kNWErrorSSLHandshakeXCertChainInvalid = -226
+    case SSLHandshakeXCertChainInvalid
     /** SSL handshake expecting client cert. */
-    case kNWErrorSSLHandshakeClientCertRequested = -227
+    case SSLHandshakeClientCertRequested
     /** SSL handshake auth interrupted. */
-    case kNWErrorSSLHandshakeServerAuthCompleted = -228
+    case SSLHandshakeServerAuthCompleted
     /** SSL handshake certificate expired. */
-    case kNWErrorSSLHandshakePeerCertExpired = -229
+    case SSLHandshakePeerCertExpired
     /** SSL handshake certificate revoked. */
-    case kNWErrorSSLHandshakePeerCertRevoked = -230
+    case SSLHandshakePeerCertRevoked
     /** SSL handshake certificate unknown. */
-    case kNWErrorSSLHandshakePeerCertUnknown = -233
+    case SSLHandshakePeerCertUnknown
     /** SSL handshake internal error. */
-    case kNWErrorSSLHandshakeInternalError = -234
+    case SSLHandshakeInternalError
     /** SSL handshake in dark wake. */
-    case kNWErrorSSLInDarkWake = -231
+    case SSLInDarkWake
     /** SSL handshake connection closed via error. */
-    case kNWErrorSSLHandshakeClosedAbort = -232
+    case SSLHandshakeClosedAbort
     /** SSL handshake timeout. */
-    case kNWErrorSSLHandshakeTimeout = -218
+    case SSLHandshakeTimeout
     /** Read connection dropped by server. */
-    case kNWErrorReadDroppedByServer = -210
+    case readDroppedByServer
     /** Read connection error. */
-    case kNWErrorReadClosedAbort = -211
+    case readClosedAbort
     /** Read connection closed. */
-    case kNWErrorReadClosedGraceful = -212
+    case readClosedGraceful
     /** Read failed. */
-    case kNWErrorReadFail = -213
+    case readFail
     /** Write connection dropped by server. */
-    case kNWErrorWriteDroppedByServer = -214
+    case writeDroppedByServer
     /** Write connection error. */
-    case kNWErrorWriteClosedAbort = -215
+    case writeClosedAbort
     /** Write connection closed. */
-    case kNWErrorWriteClosedGraceful = -216
+    case writeClosedGraceful
     /** Write failed. */
-    case kNWErrorWriteFail = -217
+    case writeFail
     /** Identity does not contain certificate. */
-    case kNWErrorIdentityCopyCertificate = -304
+    case identityCopyCertificate
     /** Identity does not contain private key. */
-    case kNWErrorIdentityCopyPrivateKey = -310
+    case identityCopyPrivateKey
+    
+    case PKCS12Error(OSStatus)
     /** PKCS12 data cannot be imported. */
-    case kNWErrorPKCS12Import = -306
+    case PKCS12Import
     /** PKCS12 data is empty. */
-    case kNWErrorPKCS12EmptyData = -305
+    case PKCS12EmptyData
     /** PKCS12 data cannot be read or is malformed. */
-    case kNWErrorPKCS12Decode = -311
+    case PKCS12Decode
     /** PKCS12 data password incorrect. */
-    case kNWErrorPKCS12AuthFailed = -312
+    case PKCS12AuthFailed
     /** PKCS12 data wrong password. */
-    case kNWErrorPKCS12Password = -313
+    case PKCS12Password
     /** PKCS12 data password required. */
-    case kNWErrorPKCS12PasswordRequired = -314
+    case PKCS12PasswordRequired
     /** PKCS12 data contains no identities. */
-    case kNWErrorPKCS12NoItems = -307
+    case PKCS12NoItems
     /** PKCS12 data contains multiple identities. */
-    case kNWErrorPKCS12MultipleItems = -309
+    case PKCS12MultipleItems
     /** Keychain cannot be searched. */
-    case kNWErrorKeychainCopyMatching = -401
+    case KeychainCopyMatching
     /** Keychain does not contain private key. */
-    case kNWErrorKeychainItemNotFound = -302
+    case KeychainItemNotFound
     /** Keychain does not contain certificate. */
-    case kNWErrorKeychainCreateIdentity = -303
+    case KeychainCreateIdentity
 }
 
+/*
 enum NWEnvironment : Int {
     case none = 0
     case sandbox = 1
@@ -384,3 +396,4 @@ class NWErrorUtil: NSObject {
     }
 }
 let NWErrorReasonCodeKey: String = "NWErrorReasonCodeKey"
+ */
