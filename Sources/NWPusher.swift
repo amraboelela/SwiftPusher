@@ -22,7 +22,7 @@ import Foundation
  
  Make sure to read Apple's documentation on *Apple Push Notification Service* and *Provider Communication*.
  */
-class NWPusher {
+public class NWPusher {
     
     /*
     /** @name Properties */
@@ -43,11 +43,12 @@ class NWPusher {
         var pusher = NWPusher()
         return data && (try? pusher.connect(withPKCS12Data: data, password: password, environment: environment)) ? pusher : nil!
     }
+ */
+    
     /** @name Connecting */
     /** Connect with the APNs using the identity. */
-
-    func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) -> Bool {
-        if self.connection {
+    class func connect(withIdentity identity: NWIdentityRef, isSandbox: Bool) throws -> Bool {
+        /*if self.connection {
             self.connection.disconnect()
         }
         self.connection = nil
@@ -60,13 +61,12 @@ class NWPusher {
         if connected == nil {
             return connected!
         }
-        self.connection = connection
+        self.connection = connection*/
         return true
     }
+ 
     /** Connect with the APNs using the identity from PKCS #12 data. */
-*/
-    
-    func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
+    public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> Bool {
         let identity = try NWSecTools.identity(withPKCS12Data: data, password: password)
         return try self.connect(withIdentity: identity, isSandbox: isSandbox)
     }

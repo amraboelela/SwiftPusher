@@ -29,6 +29,7 @@ class NWSecTools {
              }*/
             return identities.last
         }
+        return nil
     }
     
     /** Read all identities from a PKCS #12 file (.p12). */
@@ -36,30 +37,24 @@ class NWSecTools {
         guard pkcs12.count > 0 else {
             throw NWError.PKCS12EmptyData
         }
-        /*if !pkcs12.length {
-         return try? NWErrorUtil.nilWithErrorCode(kNWErrorPKCS12EmptyData)!
-         }*/
         if let dicts = try self.allIdentities(withPKCS12Data: pkcs12, password: password) {
             var ids = [Any]()
-            for dict: [String : Any] in dicts {
+            for dict in dicts {
                 if let identity = dict[kSecImportItemIdentity as String] {
-                    //if identity != nil {
-                    if let certificate = try self.certificate(withIdentity: identity) {
-                        /*if certificate == nil {
-                         return nil
-                         }*/
+                    /*if let certificate = try self.certificate(withIdentity: identity) {
                         if self.isPushCertificate(certificate) {
-                            var key: NWKeyRef? = try? self.key(withIdentity: identity)
+                            var key = try self.key(withIdentity: identity)
                             if key == nil {
                                 return nil
-                            }
+                            }*/
                             ids.append(identity)
-                        }
-                    }
+                        //}
+                    //}
                 }
             }
             return ids
         }
+        return nil
     }
     
     /*
