@@ -16,13 +16,10 @@ import Foundation
 class NWSecTools {
     /** @name Initialization */
     /** Read an identity from a PKCS #12 file (.p12) that contains a single certificate-key pair. */
-    class func identity(withPKCS12Data pkcs12: Data, password: String) throws -> NWIdentityRef? {
+    class func identity(withPKCS12Data pkcs12: Data, password: String) throws -> SecIdentity? {
         if let identities = try self.identities(withPKCS12Data: pkcs12, password: password) {
-            /*if identities == nil {
-             return nil
-             }*/
             if identities.count == 0 {
-                throw NWError.PKCS12NoItems //try? NWErrorUtil.nilWithErrorCode(kNWErrorPKCS12NoItems)!
+                throw NWError.PKCS12NoItems
             }
             /*if identities.count > 1 {
              throw NWError.PKCS12MultipleItems(count: identities.count) // //try? NWErrorUtil.nilWithErrorCode(kNWErrorPKCS12MultipleItems, reason: identities?.count)!
@@ -33,22 +30,22 @@ class NWSecTools {
     }
     
     /** Read all identities from a PKCS #12 file (.p12). */
-    class func identities(withPKCS12Data pkcs12: Data, password: String) throws -> [Any]? {
+    class func identities(withPKCS12Data pkcs12: Data, password: String) throws -> [SecIdentity]? {
         guard pkcs12.count > 0 else {
             throw NWError.PKCS12EmptyData
         }
         if let dicts = try self.allIdentities(withPKCS12Data: pkcs12, password: password) {
-            var ids = [Any]()
+            var ids = [SecIdentity]()
             for dict in dicts {
                 if let identity = dict[kSecImportItemIdentity as String] {
                     /*if let certificate = try self.certificate(withIdentity: identity) {
-                        if self.isPushCertificate(certificate) {
-                            var key = try self.key(withIdentity: identity)
-                            if key == nil {
-                                return nil
-                            }*/
-                            ids.append(identity)
-                        //}
+                     if self.isPushCertificate(certificate) {
+                     var key = try self.key(withIdentity: identity)
+                     if key == nil {
+                     return nil
+                     }*/
+                    ids.append(identity as! SecIdentity)
+                    //}
                     //}
                 }
             }
@@ -295,25 +292,37 @@ class NWSecTools {
         var result = [[String : Any]]()
         try data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
             if let cfdata = CFDataCreate(kCFAllocatorDefault, bytes, data.count) {
-                let key = CFStringGetCStringPtr(kSecImportExportPassphrase, CFStringBuiltInEncodings.UTF8.rawValue)
-                let pKey = UnsafeMutablePointer<UnsafeRawPointer?>.allocate(capacity: MemoryLayout<UnsafeRawPointer>.size)
-                pKey.pointee = UnsafeRawPointer(key)
-                let cPassword = password.cString(using: String.Encoding.utf8)
-                let pPassword = UnsafeMutablePointer<UnsafeRawPointer?>.allocate(capacity: MemoryLayout<UnsafeRawPointer>.size)
-                pPassword.pointee = UnsafeRawPointer(cPassword)
-                if let options = CFDictionaryCreate(kCFAllocatorDefault, pKey, pPassword, 1, nil, nil) {
-                    let status = SecPKCS12Import(cfdata, options, &items)
-                    if status != errSecSuccess || items == nil {
-                        throw NWError.PKCS12Error(status)
-                    }
+                let options : [String : String] = [kSecImportExportPassphrase as String : password]
+                print("options: \(options)")
+                let status = SecPKCS12Import(cfdata, options as CFDictionary, &items)
+                if status != errSecSuccess || items == nil {
+                    throw NWError.PKCS12Error(status)
                 }
-                for i in 0..<CFArrayGetCount(items)  {
+                result = items as! [[String : Any]]
+                /*print("result[0]: \(result[0])")
+                let fItem = result[0]
+                print("fItem: \(fItem)")
+                let identity = fItem["identity"]
+                print("identity: \(identity)")*/
+                //result = itemsArray
+                /*print("CFGetTypeID(fItem): \(CFGetTypeID(fItem as CFTypeRef!))")
+                //let cfDic = [:] as CFDictionary
+                print("CFArrayGetTypeID(): \(CFArrayGetTypeID())")
+                print("CFDictionaryGetTypeID(): \(CFDictionaryGetTypeID())")
+                print("CFStringGetTypeID(): \(CFStringGetTypeID())")*/
+                /*for i in 0..<CFArrayGetCount(items)  {
                     if let pItem = CFArrayGetValueAtIndex(items, i)  {
-                        let dic = pItem as! CFDictionary
-                        var theDic = [String : Any]()
-                        let dicCount = CFDictionaryGetCount(dic)
+                        let dic = pItem.bindMemory(to: CFDictionary.self, capacity: MemoryLayout<CFDictionary>.size) //as! CFDictionary
+                        var theDic = dic as! [String : Any]
+                        /*let dicCount = CFDictionaryGetCount(dic)
                         let keys = UnsafeMutablePointer<UnsafeRawPointer?>.allocate(capacity: MemoryLayout<UnsafeRawPointer>.size * dicCount)
                         let values = UnsafeMutablePointer<UnsafeRawPointer?>.allocate(capacity: MemoryLayout<UnsafeRawPointer>.size * dicCount)
+                        defer {
+                            keys.deinitialize()
+                            keys.deallocate(capacity: MemoryLayout<UnsafeRawPointer>.size * dicCount)
+                            values.deinitialize()
+                            values.deallocate(capacity: MemoryLayout<UnsafeRawPointer>.size * dicCount)
+                        }
                         CFDictionaryGetKeysAndValues(dic, keys, values)
                         for j in 0..<dicCount {
                             if let cKey = CFStringGetCStringPtr(keys[i] as! CFString, CFStringBuiltInEncodings.UTF8.rawValue) {
@@ -321,10 +330,10 @@ class NWSecTools {
                                 let theValue = values[j] as Any
                                 theDic[theKey] = theValue
                             }
-                        }
+                        }*/
                         result.append(theDic)
                     }
-                }
+                }*/
             }
         }
         return result

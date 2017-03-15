@@ -22,7 +22,8 @@ enum NWNotificationType : Int {
 }*/
 
 /** An ARC-friendly replacement of SecIdentityRef. */
-typealias NWIdentityRef = Any
+//typealias NWIdentityRef = Any
+//SecIdentity
 
 /*
 /** An ARC-friendly replacement of SecCertificateRef. */

@@ -36,18 +36,17 @@ public class NWPusher {
         if identity && try pusher.connect(withIdentity: identity, environment: environment) {
             return pusher
         }
-    }
+    }*/
     
     /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
-    class func connect(withPKCS12Data data: Data, password: String, environment: NWEnvironment, error: Error?) -> Self {
+    public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
         var pusher = NWPusher()
-        return data && (try? pusher.connect(withPKCS12Data: data, password: password, environment: environment)) ? pusher : nil!
+        return try pusher.connect(withPKCS12Data: data, password: password, isSandbox: isSandbox) ? pusher : nil
     }
- */
     
     /** @name Connecting */
     /** Connect with the APNs using the identity. */
-    class func connect(withIdentity identity: NWIdentityRef, isSandbox: Bool) throws -> Bool {
+    func connect(withIdentity identity: SecIdentity, isSandbox: Bool) throws -> Bool {
         /*if self.connection {
             self.connection.disconnect()
         }
@@ -66,9 +65,11 @@ public class NWPusher {
     }
  
     /** Connect with the APNs using the identity from PKCS #12 data. */
-    public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> Bool {
-        let identity = try NWSecTools.identity(withPKCS12Data: data, password: password)
-        return try self.connect(withIdentity: identity, isSandbox: isSandbox)
+    func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> Bool {
+        if let identity = try NWSecTools.identity(withPKCS12Data: data, password: password) {
+            return try self.connect(withIdentity: identity, isSandbox: isSandbox)
+        }
+        return false
     }
     
     /*
