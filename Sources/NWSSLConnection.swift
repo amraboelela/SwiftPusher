@@ -249,56 +249,33 @@ class NWSSLConnection {
             return
         case errSSLWouldBlock:
             throw NWError.SSLHandshakeTimeout
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeTimeout)!
         case errSecIO:
             throw NWError.SSLDroppedByServer
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLDroppedByServer)!
         case errSecAuthFailed:
             throw NWError.SSLAuthFailed
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLAuthFailed)!
         case errSSLUnknownRootCert:
             throw NWError.SSLHandshakeUnknownRootCert
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeUnknownRootCert)!
         case errSSLNoRootCert:
             throw NWError.SSLHandshakeNoRootCert
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeNoRootCert)!
         case errSSLCertExpired:
             throw NWError.SSLHandshakeCertExpired
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeCertExpired)!
         case errSSLXCertChainInvalid:
             throw NWError.SSLHandshakeXCertChainInvalid
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeXCertChainInvalid)!
         case errSSLClientCertRequested:
-            throw NWError.SSLAuthFailed
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeClientCertRequested)!
-        //case errSSLServerAuthCompleted:
-        //    throw NWError.SSLAuthFailed
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeServerAuthCompleted)!
+            throw NWError.SSLHandshakeClientCertRequested
         case errSSLPeerCertExpired:
-            throw NWError.SSLAuthFailed
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakePeerCertExpired)!
+            throw NWError.SSLHandshakePeerCertExpired
         case errSSLPeerCertRevoked:
-            throw NWError.SSLAuthFailed
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakePeerCertRevoked)!
+            throw NWError.SSLHandshakePeerCertRevoked
         case errSSLPeerCertUnknown:
-            throw NWError.SSLAuthFailed
-        //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakePeerCertUnknown)!
+            throw NWError.SSLHandshakePeerCertUnknown
         case errSSLInternal:
-            throw NWError.SSLAuthFailed
-            //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeInternalError)!
-            //#if !TARGET_OS_IPHONE
-            //    case errSecInDarkWake:
-            //    throw NWError.SSLAuthFailed
-                //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLInDarkWake)!
-            //#endif
+            throw NWError.SSLHandshakeInternalError
         case errSSLClosedAbort:
-            throw NWError.SSLAuthFailed
-            //return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeClosedAbort)!
+            throw NWError.SSLHandshakeClosedAbort
         default:
             throw NWError.SSLHandshakeFail
         }
-
-        //throw NWError.SSLHandshakeFail
     }
 }
 
