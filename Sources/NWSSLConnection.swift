@@ -24,12 +24,11 @@ class NWSSLConnection {
     var port = 0
     /** Identity containing a certificate-key pair for setting up the TLS connection. */
     var identity: SecIdentity?
-    var socket: Int = 0
+    var socket: CFSocketNativeHandle
     var context: SSLContext?
     
     /** @name Initialization */
     /** Initialize a connection parameters host name, port, and identity. */
-
     init(host: String, port: Int, identity: SecIdentity) {
         self.host = host
         self.port = port
@@ -37,49 +36,42 @@ class NWSSLConnection {
         self.socket = -1
     }
     
+    // MARK: Static methods
+    
+    static func htons(_ value: CUnsignedShort) -> CUnsignedShort {
+        return value.bigEndian
+    }
+    
     /** @name Connecting */
     /** Connect socket, TLS and perform handshake.
      Can also be used when already connected, which will then first disconnect. */
-
-    func connect() throws -> Bool {
-        /*self.disconnect()
-        var socket: Bool? = try? self.connectSocket()
-        if socket == nil {
+    func connect() throws {
+        self.disconnect()
+        do {
+            try self.connectSocket()
+            //try self.connectSSL()
+            //try self.handshakeSSL()
+        } catch {
             self.disconnect()
-            return socket!
+            throw error
         }
-        var ssl: Bool? = try? self.connectSSL()
-        if ssl == nil {
-            self.disconnect()
-            return ssl!
-        }
-        var handshake: Bool? = try? self.handshakeSSL()
-        if handshake == nil {
-            self.disconnect()
-            return handshake!
-        }*/
-        return true
     }
-     
-     /*
+    
     /** Drop connection if connected. */
-
-    override func disconnect() {
-        if self.context {
-            SSLClose(self.context)
+    func disconnect() {
+        if let context = context {
+            SSLClose(context)
         }
         if self.socket >= 0 {
-            close(self.socket)
+            close(Int32(self.socket))
         }
         self.socket = -1
-        if self.context {
-
-        }
         self.context = nil
     }
+    
+    /*
     /** @name I/O */
     /** Read length number of bytes into mutable data object. */
-
     func read(_ data: Data, length: Int) throws {
         length = 0
         var processed: size_t = 0
@@ -123,57 +115,96 @@ class NWSSLConnection {
         return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteFail, reason: status)!
     }
      
-    convenience override init() {
-        return self.init(host: nil, port: 0, identity: nil)
-    }
+    convenience init() {
+        self.init(host: "", port: 0, identity: nil)
+    }*/
 
     deinit {
         self.disconnect()
     }
-// MARK: - Connecting
+    
+    // MARK: - Connecting
 
     func connectSocket() throws {
-        var sock: Int = socket(AF_INET, SOCK_STREAM, 0)
-        if sock < 0 {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSocketCreate, reason: sock)!
+        
+        var flags = AI_PASSIVE | AI_CANONNAME
+        var hints = addrinfo()
+        hints.ai_family = PF_UNSPEC
+        #if os(OSX) || os(iOS) || os(Android)
+            hints.ai_socktype = SOCK_STREAM
+        #else
+            hints.ai_socktype = Int32(SOCK_STREAM.rawValue)
+        #endif
+        
+        hints.ai_flags = flags
+        
+        var addressInfo: UnsafeMutablePointer<addrinfo>? = nil
+        let r = getaddrinfo(host, nil, &hints, &addressInfo)
+        defer {
+            freeaddrinfo(addressInfo)
         }
-struct sockaddr_in {
-}
-
-        var addr: sockaddr_in
-        memset(addr, 0, MemoryLayout<sockaddr_in>.size)
-struct hostent {
-}
-
-        var entr: hostent? = gethostbyname(self.host.utf8)
-        if entr == nil {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSocketResolveHostName)!
+        if r != 0 {
+            throw NWError.socketConnectionFailed
         }
-struct in_addr {
-}
-
-        var host: in_addr
-        memcpy(host, entr?.h_addr, MemoryLayout<in_addr>.size)
-        addr.sin_addr = host
-        addr.sin_port = htons((self.port as? u_short))
-        addr.sin_family = AF_INET
-        var conn: Int? = connect(sock, (addr as? sockaddr), MemoryLayout<sockaddr_in>.size)
-        if conn < 0 {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSocketConnect, reason: conn)!
+        let pHost = UnsafeMutablePointer<Int8>.allocate(capacity: Int(NI_MAXHOST))
+        var hostAddress = ""
+        defer {
+            pHost.deinitialize()
+            pHost.deallocate(capacity: Int(NI_MAXHOST))
         }
-        var cntl: Int = fcntl(sock, F_SETFL, O_NONBLOCK)
-        if cntl < 0 {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSocketFileControl, reason: cntl)!
+        let info = addressInfo!.pointee
+        let family = info.ai_family
+        if family != AF_INET && family != AF_INET6 {
+            throw NWError.socketConnectionFailed
         }
-        var set: Int = 1
-        var sopt: Int? = setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, (set as? Void), MemoryLayout<Int>.size)
-        if sopt < 0 {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSocketOptions, reason: sopt)!
+        let sa_len: socklen_t = socklen_t((family == AF_INET6) ? MemoryLayout<sockaddr_in6>.size : MemoryLayout<sockaddr_in>.size)
+        if getnameinfo(info.ai_addr, sa_len, pHost, socklen_t(NI_MAXHOST), nil, 0, flags) == 0 {
+            hostAddress = String(cString: pHost)
+        } else {
+            throw NWError.socketConnectionFailed
         }
-        self.socket = sock
-        return true
+        
+        if family == AF_INET {
+            #if os(Linux)
+                let myipv4cfsock = CFSocketCreate(kCFAllocatorDefault, PF_INET, Int32(SOCK_STREAM.rawValue), Int32(IPPROTO_TCP), CFOptionFlags(kCFSocketNoCallBack), nil, nil)
+            #else
+                let myipv4cfsock = CFSocketCreate(kCFAllocatorDefault, PF_INET, SOCK_STREAM, IPPROTO_TCP, 0, nil, nil)
+            #endif
+            let sinSize = MemoryLayout<sockaddr_in>.size
+            let sin = UnsafeMutablePointer<sockaddr_in>.allocate(capacity: sinSize)
+            defer {
+                sin.deinitialize()
+                sin.deallocate(capacity: sinSize)
+            }
+            memset(sin, 0, sinSize)
+            sin.pointee.sin_family = sa_family_t(UInt16(AF_INET))
+            sin.pointee.sin_port = NWSSLConnection.htons(UInt16(port))
+            sin.pointee.sin_addr.s_addr = inet_addr(hostAddress)
+            
+            try sin.withMemoryRebound(to: UInt8.self, capacity: sinSize, {
+                let sincfd = CFDataCreate(kCFAllocatorDefault, $0, sinSize)
+                let socketError = CFSocketConnectToAddress(myipv4cfsock, sincfd, 0)
+                #if os(Linux)
+                    if socketError != 0 {
+                        throw NWError.socketConnectionFailed
+                    }
+                #else
+                    if socketError.rawValue != 0 {
+                        throw NWError.socketConnectionFailed
+                    }
+                #endif
+            })
+            self.socket = CFSocketGetNative(myipv4cfsock)
+            
+            // Make non blocking
+            let flags = fcntl(socket, F_GETFL)
+            _ = fcntl(socket, F_SETFL, flags | O_NONBLOCK)
+        } else {
+            throw NWError.socketConnectionFailed
+        }
     }
 
+    /*
     func connectSSL() throws {
         var context: SSLContextRef = SSLCreateContext(nil, kSSLClientSide, kSSLStreamType)
         if context == nil {
@@ -196,7 +227,7 @@ struct in_addr {
             return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLCertificate, reason: setcert)!
         }
         self.context = context
-        return true
+        //return true
     }
 
     func handshakeSSL() throws {

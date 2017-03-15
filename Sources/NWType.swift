@@ -164,6 +164,7 @@ enum NWError: Swift.Error {
     case KeychainItemNotFound
     /** Keychain does not contain certificate. */
     case KeychainCreateIdentity
+    case resolveHostNameError
 }
 
 /*

@@ -45,32 +45,34 @@ public class NWPusher {
     /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
     public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
         var pusher = NWPusher()
-        return try pusher.connect(withPKCS12Data: data, password: password, isSandbox: isSandbox) ? pusher : nil
+        do {
+            try pusher.connect(withPKCS12Data: data, password: password, isSandbox: isSandbox)
+            return pusher
+        } catch {
+            print("connect error: \(error)")
+            return nil
+        }
     }
     
     /** @name Connecting */
     /** Connect with the APNs using the identity. */
-    func connect(withIdentity identity: SecIdentity, isSandbox: Bool) throws -> Bool {
+    func connect(withIdentity identity: SecIdentity, isSandbox: Bool) throws {
         if (self.connection != nil) {
-            //self.connection.disconnect()
+            self.connection.disconnect()
         }
         self.connection = nil
         let host = isSandbox ? NWPusher.sandboxPushHost : NWPusher.productionPushHost
         var connection = NWSSLConnection(host: host, port: NWPusher.pushPort, identity: identity)
-        var connected: Bool? = try? connection.connect()
-        if connected == nil {
-            return connected!
-        }
+        let connected = try connection.connect()
         self.connection = connection
-        return true
+        //return connected
     }
  
     /** Connect with the APNs using the identity from PKCS #12 data. */
-    func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> Bool {
+    func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws {
         if let identity = try NWSecTools.identity(withPKCS12Data: data, password: password) {
-            return try self.connect(withIdentity: identity, isSandbox: isSandbox)
+            try self.connect(withIdentity: identity, isSandbox: isSandbox)
         }
-        return false
     }
     
     /*
