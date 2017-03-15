@@ -16,32 +16,33 @@ import Foundation
  
  Methods return `NO` if an error occurred.
  */
-class NWSSLConnection: NSObject {
+class NWSSLConnection {
     /** @name Properties */
     /** The host name, which will be resolved using DNS. */
-    var host: String = ""
+    var host = ""
     /** The host TCP port number. */
-    var port: Int = 0
+    var port = 0
     /** Identity containing a certificate-key pair for setting up the TLS connection. */
-    var identity: NWIdentityRef = nil
+    var identity: SecIdentity?
+    var socket: Int = 0
+    var context: SSLContext?
+    
     /** @name Initialization */
     /** Initialize a connection parameters host name, port, and identity. */
 
-    override init(host: String, port: Int, identity: NWIdentityRef) {
-        super.init()
-        
+    init(host: String, port: Int, identity: SecIdentity) {
         self.host = host
         self.port = port
         self.identity = identity
         self.socket = -1
-    
     }
+    
     /** @name Connecting */
     /** Connect socket, TLS and perform handshake.
      Can also be used when already connected, which will then first disconnect. */
 
-    func connect() throws {
-        self.disconnect()
+    func connect() throws -> Bool {
+        /*self.disconnect()
         var socket: Bool? = try? self.connectSocket()
         if socket == nil {
             self.disconnect()
@@ -56,9 +57,11 @@ class NWSSLConnection: NSObject {
         if handshake == nil {
             self.disconnect()
             return handshake!
-        }
+        }*/
         return true
     }
+     
+     /*
     /** Drop connection if connected. */
 
     override func disconnect() {
@@ -119,11 +122,7 @@ class NWSSLConnection: NSObject {
 
         return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteFail, reason: status)!
     }
-    var socket: Int = 0
-    var context: SSLContextRef = nil
-
-
-
+     
     convenience override init() {
         return self.init(host: nil, port: 0, identity: nil)
     }
@@ -247,7 +246,10 @@ struct in_addr {
         return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLHandshakeFail, reason: status)!
     }
 // MARK: - Read Write
+ */
 }
+
+/*
 let NWSSL_HANDSHAKE_TRY_COUNT = 1 << 26
 func NWSSLRead(connection: SSLConnectionRef, data: Void, length: size_t) -> OSStatus {
     var leng: size_t = length
@@ -304,4 +306,4 @@ func NWSSLWrite(connection: SSLConnectionRef, data: Void, length: size_t) -> OSS
     }
 
     return errSecIO
-}
+}*/

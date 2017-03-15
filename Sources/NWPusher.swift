@@ -24,12 +24,16 @@ import Foundation
  */
 public class NWPusher {
     
-    /*
+    static let sandboxPushHost = "gateway.sandbox.push.apple.com"
+    static let productionPushHost = "gateway.push.apple.com"
+    static let pushPort = 2195
+    
     /** @name Properties */
     /** The SSL connection through which all notifications are pushed. */
     var connection: NWSSLConnection!
     /** @name Initialization */
     
+    /*
     /** Creates, connects and returns a pusher object based on the provided identity. */
     class func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) throws -> NWPusher? {
         var pusher = NWPusher()
@@ -47,20 +51,17 @@ public class NWPusher {
     /** @name Connecting */
     /** Connect with the APNs using the identity. */
     func connect(withIdentity identity: SecIdentity, isSandbox: Bool) throws -> Bool {
-        /*if self.connection {
-            self.connection.disconnect()
+        if (self.connection != nil) {
+            //self.connection.disconnect()
         }
         self.connection = nil
-        if environment == NWEnvironmentAuto {
-            environment = NWSecTools.environment(forIdentity: identity)
-        }
-        var host: String = (environment == NWEnvironmentSandbox) ? NWSandboxPushHost : NWPushHost
-        var connection = NWSSLConnection(host: host, port: NWPushPort, identity: identity)
+        let host = isSandbox ? NWPusher.sandboxPushHost : NWPusher.productionPushHost
+        var connection = NWSSLConnection(host: host, port: NWPusher.pushPort, identity: identity)
         var connected: Bool? = try? connection.connect()
         if connected == nil {
             return connected!
         }
-        self.connection = connection*/
+        self.connection = connection
         return true
     }
  
@@ -195,9 +196,3 @@ public class NWPusher {
     
 }
 
-/*let NWSandboxPushHost: String = "gateway.sandbox.push.apple.com"
-
-let NWPushHost: String = "gateway.push.apple.com"
-
-let NWPushPort: Int = 2195
- */
