@@ -36,6 +36,7 @@ class NWSSLConnection {
     /** Identity containing a certificate-key pair for setting up the TLS connection. */
     var identity: SecIdentity?
     var socket: CFSocketNativeHandle
+    var pSocket: UnsafeMutablePointer<CFSocketNativeHandle>?
     var context: SSLContext?
     
     /** @name Initialization */
@@ -59,6 +60,7 @@ class NWSSLConnection {
     func connect() throws {
         self.disconnect()
         do {
+            pSocket = UnsafeMutablePointer<CFSocketNativeHandle>.allocate(capacity: MemoryLayout<CFSocketNativeHandle>.size)
             try self.connectSocket()
             try self.connectSSL()
             try self.handshakeSSL()
@@ -74,10 +76,13 @@ class NWSSLConnection {
             SSLClose(context)
         }
         if self.socket >= 0 {
-            close(Int32(self.socket))
+            close(self.socket)
         }
         self.socket = -1
         self.context = nil
+        pSocket?.deinitialize()
+        pSocket?.deallocate(capacity: MemoryLayout<CFSocketNativeHandle>.size)
+        pSocket = nil
     }
     
     /*
@@ -206,7 +211,7 @@ class NWSSLConnection {
                 #endif
             })
             self.socket = CFSocketGetNative(myipv4cfsock)
-            
+            pSocket?.pointee = self.socket
             // Make non blocking
             let flags = fcntl(socket, F_GETFL)
             _ = fcntl(socket, F_SETFL, flags | O_NONBLOCK)
@@ -222,7 +227,7 @@ class NWSSLConnection {
         if SSLSetIOFuncs(context, NWSSLRead, NWSSLWrite) != errSecSuccess {
             throw NWError.SSLCallbacksCannotBeSet
         }
-        if SSLSetConnection(context, Int(self.socket) as? SSLConnectionRef) != errSecSuccess {
+        if SSLSetConnection(context, SSLConnectionRef(pSocket)) != errSecSuccess {
             throw NWError.SSLConnectionCannotBeSet
         }
         if SSLSetPeerDomainName(context, self.host.cString, self.host.length) != errSecSuccess {
@@ -240,6 +245,7 @@ class NWSSLConnection {
         }
         var status = errSSLWouldBlock
         var i = 0
+        let NWSSL_HANDSHAKE_TRY_COUNT = 1 << 26
         while i < NWSSL_HANDSHAKE_TRY_COUNT && status == errSSLWouldBlock {
             status = SSLHandshake(context)
             i += 1
@@ -281,63 +287,60 @@ class NWSSLConnection {
 
 // MARK: - Read Write
 
-
-let NWSSL_HANDSHAKE_TRY_COUNT = 1 << 26
-
-//(SSLConnectionRef, UnsafeMutableRawPointer, UnsafeMutablePointer<Int>)
 func NWSSLRead(connection: SSLConnectionRef, data: UnsafeMutableRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
-    /*var leng: size_t = length
-    length = 0
-    var read: size_t = 0
-    var rcvd: ssize_t = 0
-    
+    var leng = length.pointee
+    length.pointee = 0
+    var read = 0
+    var rcvd = 0
+    let socket = connection.bindMemory(to: CFSocketNativeHandle.self, capacity: MemoryLayout<CFSocketNativeHandle>.size).pointee
     while read < leng {
-        rcvd = recv(Int(connection), CChar(data) + read, leng - read, 0)
+        rcvd = recv(socket, data + read, leng - read, 0)
         if rcvd <= 0 {
             break
         }
         read += rcvd
     }
-    length = read
-    if rcvd > 0 || !leng {
+    length.pointee = read
+    if rcvd > 0 || leng==0 {
         return errSecSuccess
     }
-    if !rcvd {
+    if rcvd==0 {
         return errSSLClosedGraceful
     }
     switch errno {
-        case EAGAIN:
-            return errSSLWouldBlock
-        case ECONNRESET:
-            return errSSLClosedAbort
-    }*/
-
-    return errSecIO
+    case EAGAIN:
+        return errSSLWouldBlock
+    case ECONNRESET:
+        return errSSLClosedAbort
+    default:
+        return errSecIO
+    }
 }
 
 func NWSSLWrite(connection: SSLConnectionRef, data: UnsafeRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
-    /*var leng: size_t = length
-    length = 0
-    var sent: size_t = 0
-    var wrtn: ssize_t = 0
-    
+    var leng = length.pointee
+    length.pointee = 0
+    var sent = 0
+    var wrtn = 0
+    let socket = connection.bindMemory(to: CFSocketNativeHandle.self, capacity: MemoryLayout<CFSocketNativeHandle>.size).pointee
     while sent < leng {
-        wrtn = write(Int(connection), CChar(data) + sent, leng - sent)
+        wrtn = write(socket, data + sent, leng - sent)
         if wrtn <= 0 {
             break
         }
         sent += wrtn
     }
-    length = sent
-    if wrtn > 0 || !leng {
+    length.pointee = sent
+    if wrtn > 0 || length.pointee==0 {
         return errSecSuccess
     }
     switch errno {
-        case EAGAIN:
-            return errSSLWouldBlock
-        case EPIPE:
-            return errSSLClosedAbort
-    }*/
-    return errSecIO
+    case EAGAIN:
+        return errSSLWouldBlock
+    case EPIPE:
+        return errSSLClosedAbort
+    default:
+        return errSecIO
+    }
 }
  
