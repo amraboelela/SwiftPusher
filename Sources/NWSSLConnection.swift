@@ -6,6 +6,17 @@
 //  Copyright (c) 2012 noodlewerk. All rights reserved.
 //
 import Foundation
+
+extension String {
+    var length: Int {
+        return characters.count
+    }
+    
+    public var cString: UnsafeMutablePointer<Int8> {
+        return UnsafeMutablePointer<Int8>(mutating: NSString(string: self).utf8String)!
+    }
+}
+
 /** An SSL (TLS) connection to the APNs.
 
  This class is basically an Objective-C wrapper around `SSLContextRef` and `SSLConnectionRef`, which are part of the native Secure Transport framework. This class provides a generic interface for SSL (TLS) connections, independent of NWPusher.
@@ -204,32 +215,26 @@ class NWSSLConnection {
         }
     }
 
-    /*
     func connectSSL() throws {
-        var context: SSLContextRef = SSLCreateContext(nil, kSSLClientSide, kSSLStreamType)
-        if context == nil {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLContext)!
+        guard let context = SSLCreateContext(nil, .clientSide, .streamType) else {
+            throw NWError.SSLConnectionCannotBeSet
         }
-        var setio: OSStatus = SSLSetIOFuncs(context, NWSSLRead, NWSSLWrite)
-        if setio != errSecSuccess {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLIOFuncs, reason: setio)!
+        if SSLSetIOFuncs(context, NWSSLRead, NWSSLWrite) != errSecSuccess {
+            throw NWError.SSLConnectionCannotBeSet
         }
-        var setconn: OSStatus? = SSLSetConnection(context, (Int(self.socket) as? SSLConnectionRef))
-        if setconn != errSecSuccess {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLConnection, reason: setconn)!
+        if SSLSetConnection(context, Int(self.socket) as? SSLConnectionRef) != errSecSuccess {
+            throw NWError.SSLConnectionCannotBeSet
         }
-        var setpeer: OSStatus = SSLSetPeerDomainName(context, self.host.utf8, strlen(self.host.utf8))
-        if setpeer != errSecSuccess {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLPeerDomainName, reason: setpeer)!
+        if SSLSetPeerDomainName(context, self.host.cString, self.host.length) != errSecSuccess {
+            throw NWError.SSLConnectionCannotBeSet
         }
-        var setcert: OSStatus? = SSLSetCertificate(context, ([self.identity] as? CFArrayRef))
-        if setcert != errSecSuccess {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorSSLCertificate, reason: setcert)!
+        if SSLSetCertificate(context, [self.identity] as? CFArray) != errSecSuccess {
+            throw NWError.SSLConnectionCannotBeSet
         }
         self.context = context
-        //return true
     }
-
+     
+     /*
     func handshakeSSL() throws {
         var status: OSStatus = errSSLWouldBlock
         var i = 0
@@ -280,10 +285,11 @@ class NWSSLConnection {
  */
 }
 
-/*
 let NWSSL_HANDSHAKE_TRY_COUNT = 1 << 26
-func NWSSLRead(connection: SSLConnectionRef, data: Void, length: size_t) -> OSStatus {
-    var leng: size_t = length
+
+//(SSLConnectionRef, UnsafeMutableRawPointer, UnsafeMutablePointer<Int>)
+func NWSSLRead(connection: SSLConnectionRef, data: UnsafeMutableRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
+    /*var leng: size_t = length
     length = 0
     var read: size_t = 0
     var rcvd: ssize_t = 0
@@ -307,13 +313,13 @@ func NWSSLRead(connection: SSLConnectionRef, data: Void, length: size_t) -> OSSt
             return errSSLWouldBlock
         case ECONNRESET:
             return errSSLClosedAbort
-    }
+    }*/
 
     return errSecIO
 }
 
-func NWSSLWrite(connection: SSLConnectionRef, data: Void, length: size_t) -> OSStatus {
-    var leng: size_t = length
+func NWSSLWrite(connection: SSLConnectionRef, data: UnsafeRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
+    /*var leng: size_t = length
     length = 0
     var sent: size_t = 0
     var wrtn: ssize_t = 0
@@ -334,7 +340,7 @@ func NWSSLWrite(connection: SSLConnectionRef, data: Void, length: size_t) -> OSS
             return errSSLWouldBlock
         case EPIPE:
             return errSSLClosedAbort
-    }
-
+    }*/
     return errSecIO
-}*/
+}
+ 
