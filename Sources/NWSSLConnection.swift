@@ -109,31 +109,29 @@ class NWSSLConnection {
      */
     
     /** Write length number of bytes from data object. */
-    func write(_ data: Data, length: Int) throws {
-        /*length = 0
-        var processed: size_t = 0
-        var status: OSStatus = SSLWrite(self.context, data.bytes, data.length, processed)
-        length = processed
-        switch status {
-            case errSecSuccess:
-                return true
-            case errSSLWouldBlock:
-                return true
-            case errSecIO:
-                return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteDroppedByServer)!
-            case errSSLClosedAbort:
-                return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteClosedAbort)!
-            case errSSLClosedGraceful:
-                return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteClosedGraceful)!
+    func write(_ data: Data, length: UnsafeMutablePointer<Int>) throws {
+        if let context = self.context {
+            try data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
+                let status = SSLWrite(context, bytes, data.count, length)
+                switch status {
+                case errSecSuccess:
+                    return
+                case errSSLWouldBlock:
+                    return
+                case errSecIO:
+                    throw NWError.writeDroppedByServer
+                case errSSLClosedAbort:
+                    throw NWError.writeClosedAbort
+                case errSSLClosedGraceful:
+                    throw NWError.writeClosedGraceful
+                default:
+                    throw NWError.writeFail
+                }
+            }
+        } else {
+            throw NWError.writeFail
         }
-
-        return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteFail, reason: status)!*/
     }
-    
-    /*
-    convenience init() {
-        self.init(host: "", port: 0, identity: nil)
-    }*/
 
     deinit {
         self.disconnect()

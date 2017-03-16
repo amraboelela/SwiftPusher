@@ -100,9 +100,9 @@ public class NWPusher {
     func push(_ notification: NWNotification, type: NWNotificationType) throws {
         var length = 0
         let data = notification.data(with: type)
-        try self.connection.write(data, length: length)
+        try self.connection.write(data, length: &length)
         if length != data.count {
-            //try NWErrorUtil.noWithErrorCode(kNWErrorPushWriteFail, reason: length)!
+            throw NWError.pushWriteFail
         }
     }
     
