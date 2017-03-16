@@ -338,49 +338,4 @@ class NWSecTools {
         }
         return result
     }
-    
-                /*
-                 class func allKeychainCertificatesWithError(_ error: Error?) -> [Any] {
-                 var options: [AnyHashable: Any]? = [(kSecClass as? Any): (kSecClassCertificate as? Any), (kSecMatchLimit as? Any): (kSecMatchLimitAll as? Any)]
-                 var certs: CFArrayRef? = nil
-                 var status: OSStatus? = SecItemCopyMatching((options as? CFDictionaryRef), (certs as? CFTypeRef))
-                 var certificates: [Any] = CFBridgingRelease(certs)
-                 if status != errSecSuccess || !certs {
-                 return try? NWErrorUtil.nilWithErrorCode(kNWErrorKeychainCopyMatching, reason: status)!
-                 }
-                 return certificates
-                 }
-                 #if !TARGET_OS_IPHONE
-                 
-                 class func value(withCertificate certificate: NWCertificateRef, key: Any) -> Any {
-                 return (try? self.values(withCertificate: certificate, keys: [key]))[key][(kSecPropertyKeyValue as? Any)]!
-                 }
-                 #endif
-                 // MARK: - Deprecated
-                 */
 }
-
-                    /*
-/** Types of push certificates. */
-enum NWCertType : Int {
-    /** None. */
-    case kNWCertTypeNone = 0
-    /** iOS Development. */
-    case kNWCertTypeIOSDevelopment = 1
-    /** iOS Production. */
-    case kNWCertTypeIOSProduction = 2
-    /** OS X Development. */
-    case kNWCertTypeMacDevelopment = 3
-    /** OS X Production. */
-    case kNWCertTypeMacProduction = 4
-    /** Simplified Certificate Handling. */
-    case kNWCertTypeSimplified = 5
-    /** Web Push Production. */
-    case kNWCertTypeWebProduction = 6
-    /** VoIP Services. */
-    case kNWCertTypeVoIPServices = 7
-    /** WatchKit Services. */
-    case kNWCertTypeWatchKitServices = 8
-    /** Unknown. */
-    case kNWCertTypeUnknown = 9
-}*/

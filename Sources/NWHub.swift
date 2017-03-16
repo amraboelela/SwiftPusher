@@ -5,6 +5,9 @@
 //
 //  Copyright (c) 2014 noodlewerk. All rights reserved.
 //
+//  Modified by: Amr Aboelela on 3/16/17.
+//
+
 import Foundation
 
 /** Allows callback on errors while pushing to and reading from server. 

@@ -5,6 +5,9 @@
 //
 //  Copyright (c) 2012 noodlewerk. All rights reserved.
 //
+//  Modified by: Amr Aboelela on 3/16/17.
+//
+
 import Foundation
 
 extension String {

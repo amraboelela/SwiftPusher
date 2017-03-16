@@ -5,6 +5,9 @@
 //
 //  Copyright (c) 2014 noodlewerk. All rights reserved.
 //
+//  Modified by: Amr Aboelela on 3/16/17.
+//
+
 import Foundation
 
 extension String {
@@ -71,8 +74,7 @@ extension Data {
  Read more about this in Apple's documentation under *Provider Communication with Apple Push Notification Service* and *The Notification Payload*.
  */
 class NWNotification {
-    //static let NWDeviceTokenSize = 32
-    //static let NWPayloadMaxSize = 256
+    static var notifications = [NWNotification]()
     
     /** @name Properties */
     /** String representation of serialized JSON. */
@@ -130,38 +132,17 @@ class NWNotification {
         
         self.payload = payload
         self.token = token
-        self.identifier = 0
+        self.identifier = NWNotification.notifications.count
+        NWNotification.notifications.append(self)
         self.expiration = date
         self.priority = priority
     
     }
     
-    /** Create and returns a notification object based on given raw attributes. */
-    /*override init(payloadData payload: Data, tokenData token: Data, identifier: Int, expirationStamp: Int, addExpiration isAddExpiration: Bool, priority: Int) {
-        super.init()
-        
-        self.payloadData = payload
-        self.tokenData = token
-        self.identifier = identifier
-        self.expirationStamp = expirationStamp
-        self.isAddExpiration = isAddExpiration
-        self.priority = priority
-    
-    }*/
-    
     /** @name Serialization */
     /** Serialize this notification using provided format. */
     func data() -> Data {
-        /*switch type {
-         case .kNWNotificationType0:
-         return self.dataWithType0()
-         case .kNWNotificationType1:
-         return self.dataWithType1()
-         case .kNWNotificationType2:*/
         return self.dataWithType2()
-        /*default:
-         return Data()
-         }*/
     }
     
     /** @name Helpers */
@@ -169,17 +150,11 @@ class NWNotification {
     class func data(fromHex hex: String) -> Data {
         return hex.dataFromHexadecimal
     }
+    
     /** Converts binary data into a hex string. */
-
     class func hex(from data: Data?) -> String {
-        if let data = data {
-            return data.hexEncodedString
-        } else {
-            return ""
-        }
+        return data?.hexEncodedString ?? ""
     }
-
-    // MARK: - Accessors
     
     // MARK: - Helpers
 
@@ -189,14 +164,6 @@ class NWNotification {
     }
     
     // MARK: - Types
-
-    func dataWithType0() -> Data {
-        return Data()
-    }
-    
-    func dataWithType1() -> Data {
-        return Data()
-    }
     
     func dataWithType2() -> Data {
         var result = Data()
