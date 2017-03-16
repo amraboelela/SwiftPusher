@@ -54,18 +54,8 @@ extension Data {
     mutating func appendWith(identifier: Int, bytes: UnsafeRawPointer, length: Int) {
         var i = UInt8(identifier)
         var l: UInt16 = htons(UInt16(length))
-        /*let lPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: MemoryLayout<UInt16>.size)
-        lPointer.pointee = l
-        defer {
-            lPointer.deinitialize()
-            lPointer.deallocate(capacity: MemoryLayout<UInt16>.size)
-        }*/
         self.append(&i, count: 1)
         self.appendRawBytes(&l, length: 2)
-        /*
-        lPointer.withMemoryRebound(to: UInt8.self, capacity: MemoryLayout<UInt16>.size, {
-            self.append($0, count: 2)
-        })*/
         self.append(bytes.bindMemory(to: UInt8.self, capacity: length), count: length)
     }
 }
@@ -81,8 +71,8 @@ extension Data {
  Read more about this in Apple's documentation under *Provider Communication with Apple Push Notification Service* and *The Notification Payload*.
  */
 class NWNotification {
-    static let NWDeviceTokenSize = 32
-    static let NWPayloadMaxSize = 256
+    //static let NWDeviceTokenSize = 32
+    //static let NWPayloadMaxSize = 256
     
     /** @name Properties */
     /** String representation of serialized JSON. */
@@ -136,12 +126,11 @@ class NWNotification {
     
     /** @name Initialization */
     /** Create and returns a notification object based on given attribute objects. */
-    init(payload: String, token: String, identifier: Int, expiration date: Date, priority: Int) {
-        //super.init()
+    init(payload: String, token: String, expiration date: Date = Date(), priority: Int = 0) {
         
         self.payload = payload
         self.token = token
-        self.identifier = identifier
+        self.identifier = 0
         self.expiration = date
         self.priority = priority
     
@@ -162,17 +151,17 @@ class NWNotification {
     
     /** @name Serialization */
     /** Serialize this notification using provided format. */
-    func data(with type: NWNotificationType) -> Data {
-        switch type {
-        case .kNWNotificationType0:
-            return self.dataWithType0()
-        case .kNWNotificationType1:
-            return self.dataWithType1()
-        case .kNWNotificationType2:
-            return self.dataWithType2()
-        default:
-            return Data()
-        }
+    func data() -> Data {
+        /*switch type {
+         case .kNWNotificationType0:
+         return self.dataWithType0()
+         case .kNWNotificationType1:
+         return self.dataWithType1()
+         case .kNWNotificationType2:*/
+        return self.dataWithType2()
+        /*default:
+         return Data()
+         }*/
     }
     
     /** @name Helpers */
@@ -235,10 +224,6 @@ class NWNotification {
         var length = htonl(UInt32(data.count))
         result.appendRawBytes(&length, length: 4)
         result.append(data)
-        var finalResult: Data?
-        result.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
-            finalResult = Data(bytes: bytes, count: result.count)
-        }
-        return finalResult ?? Data()
+        return result
     }
 }

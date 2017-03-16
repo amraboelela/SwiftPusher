@@ -24,9 +24,13 @@ import Foundation
  */
 public class NWPusher {
     
+    public typealias TokenErrorHandler = (_ token: String, _ error: Error?) -> Void
+    
     static let sandboxPushHost = "gateway.sandbox.push.apple.com"
     static let productionPushHost = "gateway.push.apple.com"
     static let pushPort = 2195
+    
+    var tokenErrorHandler: TokenErrorHandler?
     
     /** @name Properties */
     /** The SSL connection through which all notifications are pushed. */
@@ -83,23 +87,20 @@ public class NWPusher {
         }
         return try? self.connection.connect()!
     }
+    
     /** Disconnect from the server, allows reconnect. */
-
-    override func disconnect() {
+    func disconnect() {
         self.connection.disconnect()
         self.connection = nil
     }*/
     
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
-    public func pushPayload(_ payload: String, token: String, identifier: Int) throws {
-        try self.push(NWNotification(payload: payload, token: token, identifier: identifier, expiration: Date(), priority: 0), type: .kNWNotificationType2)
-    }
-    
-    /** Push a notification using push type for serialization. */
-    func push(_ notification: NWNotification, type: NWNotificationType) throws {
+    public func push(payload: String, withToken token: String, callback: @escaping TokenErrorHandler) throws {
+        tokenErrorHandler = callback
+        let notification = NWNotification(payload: payload, token: token)
         var length = 0
-        let data = notification.data(with: type)
+        let data = notification.data()
         try self.connection.write(data, length: &length)
         if length != data.count {
             throw NWError.pushWriteFail
@@ -107,9 +108,19 @@ public class NWPusher {
     }
     
     /*
+    /** Push a notification using push type for serialization. */
+    func push(notification: NWNotification) throws {
+        var length = 0
+        let data = notification.data()
+        try self.connection.write(data, length: &length)
+        if length != data.count {
+            throw NWError.pushWriteFail
+        }
+    }*/
+    
+    /*
     /** @name Reading */
     /** Read back from the server the notification identifiers of failed pushes. */
-
     func readFailedIdentifier(_ identifier: Int, apnError: Error?) throws {
         identifier = 0
         var data = Data(length: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
@@ -171,28 +182,7 @@ public class NWPusher {
         }
         return pairs
     }
-    // deprecated
-
-    class func connect(withIdentity identity: NWIdentityRef, error: Error?) -> Self {
-        return try? self.connect(withIdentity: identity, environment: NWEnvironmentAuto)!
-    }
-
-    class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
-        return try self.connect(withPKCS12Data: data, password: password, environment: NWEnvironmentAuto)
-    }
-    
-    func connect(withIdentity identity: NWIdentityRef, error: Error?) -> Bool {
-        return try? self.connect(withIdentity: identity, environment: NWEnvironmentAuto)!
-    }
-
-    func connect(withPKCS12Data data: Data, password: String, error: Error?) -> Bool {
-        return try? self.connect(withPKCS12Data: data, password: password, environment: NWEnvironmentAuto)!
-    }*/
-
-// MARK: - Connecting
-// MARK: - Pushing payload
-// MARK: - Reading failed
-// MARK: - Deprecated
+    */
     
 }
 
