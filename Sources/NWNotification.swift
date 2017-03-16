@@ -47,6 +47,27 @@ extension Data {
         }
     }
     
+    mutating func appendRawBytes(_ bytes: UnsafeRawPointer, length: Int) {
+        self.append(bytes.bindMemory(to: UInt8.self, capacity: length), count: length)
+    }
+    
+    mutating func appendWith(identifier: Int, bytes: UnsafeRawPointer, length: Int) {
+        var i = UInt8(identifier)
+        var l: UInt16 = htons(UInt16(length))
+        /*let lPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: MemoryLayout<UInt16>.size)
+        lPointer.pointee = l
+        defer {
+            lPointer.deinitialize()
+            lPointer.deallocate(capacity: MemoryLayout<UInt16>.size)
+        }*/
+        self.append(&i, count: 1)
+        self.appendRawBytes(&l, length: 2)
+        /*
+        lPointer.withMemoryRebound(to: UInt8.self, capacity: MemoryLayout<UInt16>.size, {
+            self.append($0, count: 2)
+        })*/
+        self.append(bytes.bindMemory(to: UInt8.self, capacity: length), count: length)
+    }
 }
 
 /** A single push message, containing the receiver device token, the payload, and delivery attributes.
@@ -67,14 +88,15 @@ class NWNotification {
     /** String representation of serialized JSON. */
     var payload: String {
         get {
-            return self.payloadData?.simpleDescription ?? ""
+            return self.payloadData.simpleDescription ?? ""
         }
         set {
-            self.payloadData = newValue.data(using: String.Encoding.utf8)
+            self.payloadData = newValue.data(using: String.Encoding.utf8) ?? Data()
         }
     }
+    
     /** UTF-8 data representation of serialized JSON. */
-    var payloadData: Data?
+    var payloadData = Data()
     
     /** Hex string representation of the device token. */
     var token: String {
@@ -89,26 +111,28 @@ class NWNotification {
         }
     }
     /** Data representation of the device token. */
-    var tokenData: Data?
+    var tokenData = Data()
     
     /** Identifier used for correlating server response on error. */
     var identifier = 0
     /** The expiration date after which the server will not attempt to deliver. */
-    var expiration = TimeInterval(0) /*Date! {
+    var expiration: Date? {
         get {
-            return self.addExpiration ? Date(timeIntervalSince1970: self.expirationStamp) : nil
+            return isAddExpiration ? Date(timeIntervalSince1970: TimeInterval(expirationStamp)) : nil
         }
-        set(date) {
-            self.expirationStamp = Int(date.timeIntervalSince1970)
-            self.addExpiration = !!date
+        set {
+            if let newValue = newValue {
+                self.expirationStamp = Int(newValue.timeIntervalSince1970)
+                self.isAddExpiration = true
+            }
         }
-    }*/
+    }
     /** Epoch seconds representation of expiration date. */
-    //var expirationStamp: Int = 0
+    var expirationStamp = 0
     /** Notification priority used by server for delivery optimization. */
     var priority = 0
     /** Indicates whether the expiration date should be serialized. */
-    //var isAddExpiration: Bool = false
+    var isAddExpiration = false
     
     /** @name Initialization */
     /** Create and returns a notification object based on given attribute objects. */
@@ -118,12 +142,12 @@ class NWNotification {
         self.payload = payload
         self.token = token
         self.identifier = identifier
-        self.expiration = date.timeIntervalSinceReferenceDate
+        self.expiration = date
         self.priority = priority
     
     }
+    
     /** Create and returns a notification object based on given raw attributes. */
-
     /*override init(payloadData payload: Data, tokenData token: Data, identifier: Int, expirationStamp: Int, addExpiration isAddExpiration: Bool, priority: Int) {
         super.init()
         
@@ -154,16 +178,6 @@ class NWNotification {
     /** Converts a hex string into binary data. */
     class func data(fromHex hex: String) -> Data {
         return hex.dataFromHexadecimal
-        /*
-        var result = Data()
-        var buffer = ["\0", "\0", "\0"]
-        for i in 0..<(hex.characters.count ?? 0) / 2 {
-            buffer[0] = hex[i * 2]
-            buffer[1] = hex[i * 2 + 1]
-            var b: UInt8 = strtol(buffer, nil, 16)
-            result.append(b, length: 1)
-        }
-        return result*/
     }
     /** Converts binary data into a hex string. */
 
@@ -181,13 +195,6 @@ class NWNotification {
 
     class func filterHex(_ hex: String) -> String {
         let hexlc = hex.lowercased()
-        /*var result = ""
-        for i in 0..<(hexlc.characters.count ?? 0) {
-            var c = hexlc[i]
-            if (c >= "a" && c <= "f") || (c >= "0" && c <= "9") {
-                result += String(characters: c, length: 1)
-            }
-        }*/
         return hexlc
     }
     
@@ -202,47 +209,36 @@ class NWNotification {
     }
     
     func dataWithType2() -> Data {
-        /*var result = Data(length: 5)
-        if self.tokenData {
-            self.self.append(to: result, identifier: 1, bytes: self.tokenData.bytes, length: self.tokenData.length)
+        var result = Data()
+        var command = UInt8(2)
+        result.append(&command, count: 1)
+        var data = Data()
+        self.tokenData.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
+            data.appendWith(identifier: 1, bytes: bytes, length: self.tokenData.count)
         }
-        if self.payloadData {
-            self.self.append(to: result, identifier: 2, bytes: self.payloadData.bytes, length: self.payloadData.length)
+        self.payloadData.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
+            data.appendWith(identifier: 2, bytes: bytes, length: self.payloadData.count)
         }
-        var identifier: UInt32 = htonl(self.identifier)
-        var expires: UInt32 = htonl(self.expirationStamp)
-        var priority: UInt8 = self.priority
+        
+        var identifier = htonl(UInt32(self.identifier))
+        var expires = htonl(UInt32(self.expirationStamp))
+        var priority = UInt8(self.priority)
         if identifier != 0 {
-            self.self.append(to: result, identifier: 3, bytes: identifier, length: 4)
+            data.appendWith(identifier: 3, bytes: &identifier, length: 4)
         }
         if self.isAddExpiration {
-            self.self.append(to: result, identifier: 4, bytes: expires, length: 4)
+            data.appendWith(identifier: 4, bytes: &expires, length: 4)
         }
         if priority != 0 {
-            self.self.append(to: result, identifier: 5, bytes: priority, length: 1)
+            data.appendWith(identifier: 5, bytes: &priority, length: 1)
         }
-        var command: UInt8 = 2
-        result.replaceBytes(in: NSRange(location: 0, length: 1), withBytes: command)
-        var length: UInt32 = htonl(result.length - 5)
-        result.replaceBytes(in: NSRange(location: 1, length: 4), withBytes: length)
-        return result*/
+        var length = htonl(UInt32(data.count))
+        result.appendRawBytes(&length, length: 4)
+        result.append(data)
+        result.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
+            return Data(bytes: bytes, count: result.count)
+        }
         return Data()
-    }
-
-    class func append(to buffer: inout Data, identifier: Int, bytes: UnsafeRawPointer, length: Int) {
-        var i = UInt8(identifier)
-        var l: UInt16 = htons(UInt16(length))
-        let lPointer = UnsafeMutablePointer<UInt16>.allocate(capacity: MemoryLayout<UInt16>.size)
-        lPointer.pointee = l
-        defer {
-            lPointer.deinitialize()
-            lPointer.deallocate(capacity: MemoryLayout<UInt16>.size)
-        }
-        buffer.append(&i, count: 1)
-        lPointer.withMemoryRebound(to: UInt8.self, capacity: MemoryLayout<UInt16>.size, {
-            buffer.append($0, count: 2)
-        })
-        buffer.append(bytes.bindMemory(to: UInt8.self, capacity: length), count: length)
     }
 }
 

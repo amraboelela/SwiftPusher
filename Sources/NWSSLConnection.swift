@@ -18,6 +18,10 @@ func htons(_ value: CUnsignedShort) -> CUnsignedShort {
     return value.bigEndian
 }
 
+func htonl(_ value: CUnsignedInt) -> CUnsignedInt {
+    return value.bigEndian
+}
+
 /** An SSL (TLS) connection to the APNs.
 
  This class is basically an Objective-C wrapper around `SSLContextRef` and `SSLConnectionRef`, which are part of the native Secure Transport framework. This class provides a generic interface for SSL (TLS) connections, independent of NWPusher.
