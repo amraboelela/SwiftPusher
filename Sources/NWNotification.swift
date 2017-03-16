@@ -164,14 +164,15 @@ class NWNotification {
     /** Serialize this notification using provided format. */
     func data(with type: NWNotificationType) -> Data {
         switch type {
-            case .kNWNotificationType0:
-                return self.dataWithType0()
-            case .kNWNotificationType1:
-                return self.dataWithType1()
-            case .kNWNotificationType2:
-                return self.dataWithType2()
+        case .kNWNotificationType0:
+            return self.dataWithType0()
+        case .kNWNotificationType1:
+            return self.dataWithType1()
+        case .kNWNotificationType2:
+            return self.dataWithType2()
+        default:
+            return Data()
         }
-        return Data()
     }
     
     /** @name Helpers */
@@ -219,7 +220,6 @@ class NWNotification {
         self.payloadData.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
             data.appendWith(identifier: 2, bytes: bytes, length: self.payloadData.count)
         }
-        
         var identifier = htonl(UInt32(self.identifier))
         var expires = htonl(UInt32(self.expirationStamp))
         var priority = UInt8(self.priority)
@@ -235,68 +235,10 @@ class NWNotification {
         var length = htonl(UInt32(data.count))
         result.appendRawBytes(&length, length: 4)
         result.append(data)
+        var finalResult: Data?
         result.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
-            return Data(bytes: bytes, count: result.count)
+            finalResult = Data(bytes: bytes, count: result.count)
         }
-        return Data()
+        return finalResult ?? Data()
     }
 }
-
-/*
-var p = buffer
-var command: UInt8 = 0
-MemoryLayout<UInt8>.size
-
-var tokenLength: UInt16 = htons(self.tokenData.length)
-
-MemoryLayout<UInt16>.size
-
-var length = ()
-
-var payloadLength: UInt16 = htons(self.payloadData.length)
-
-MemoryLayout<UInt16>.size
-
-var length = ()
-
-
-func buffer() {
-}
-
-class func sizeof() {
-}
-
-class func nwDeviceTokenSize() {
-}
-
-class func nwPayloadMaxSize() {
-}
- 
-var p = buffer
-var command: UInt8 = 1
-MemoryLayout<UInt8>.size
-
-var ID: UInt32 = htonl(self.identifier)
-
-MemoryLayout<UInt32>.size
-
-var exp: UInt32 = htonl(self.expirationStamp)
-
-MemoryLayout<UInt32>.size
-
-var tokenLength: UInt16 = htons(self.tokenData.length)
-
-MemoryLayout<UInt16>.size
-
-var length = ()
-
-var payloadLength: UInt16 = htons(self.payloadData.length)
-
-MemoryLayout<UInt16>.size
-
-var length = ()
-
-
-func buffer() {
-}
-*/
