@@ -8,13 +8,14 @@
 import Foundation
 
 extension String {
-    var length: Int {
-        return characters.count
-    }
     
     public var cString: UnsafeMutablePointer<Int8> {
         return UnsafeMutablePointer<Int8>(mutating: NSString(string: self).utf8String)!
     }
+}
+
+func htons(_ value: CUnsignedShort) -> CUnsignedShort {
+    return value.bigEndian
 }
 
 /** An SSL (TLS) connection to the APNs.
@@ -50,9 +51,6 @@ class NWSSLConnection {
     
     // MARK: Static methods
     
-    static func htons(_ value: CUnsignedShort) -> CUnsignedShort {
-        return value.bigEndian
-    }
     
     /** @name Connecting */
     /** Connect socket, TLS and perform handshake.
@@ -194,7 +192,7 @@ class NWSSLConnection {
             }
             memset(sin, 0, sinSize)
             sin.pointee.sin_family = sa_family_t(UInt16(AF_INET))
-            sin.pointee.sin_port = NWSSLConnection.htons(UInt16(port))
+            sin.pointee.sin_port = htons(UInt16(port))
             sin.pointee.sin_addr.s_addr = inet_addr(hostAddress)
             
             try sin.withMemoryRebound(to: UInt8.self, capacity: sinSize, {

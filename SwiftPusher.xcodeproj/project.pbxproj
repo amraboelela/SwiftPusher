@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0C4E307F1E79F529000A9DF9 /* NWNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899E31E774A9200AEB5E0 /* NWNotification.swift */; };
 		0C84B4ED1E78CF8900400362 /* NWSSLConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CF899E71E774A9200AEB5E0 /* NWSSLConnection.swift */; };
 		0CF899B91E77476600AEB5E0 /* SwiftPusher.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0CF899AF1E77476500AEB5E0 /* SwiftPusher.framework */; };
 		0CF899D91E77485F00AEB5E0 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0CF899CD1E77485F00AEB5E0 /* Info.plist */; };
@@ -240,6 +241,7 @@
 				0CF899F51E7762EA00AEB5E0 /* NWSecTools.swift in Sources */,
 				0CF899EB1E774A9200AEB5E0 /* NWPusher.swift in Sources */,
 				0CF899F61E7766D300AEB5E0 /* NWType.swift in Sources */,
+				0C4E307F1E79F529000A9DF9 /* NWNotification.swift in Sources */,
 				0C84B4ED1E78CF8900400362 /* NWSSLConnection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

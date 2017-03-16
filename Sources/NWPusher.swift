@@ -88,27 +88,30 @@ public class NWPusher {
     override func disconnect() {
         self.connection.disconnect()
         self.connection = nil
-    }
+    }*/
+    
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
-
-    func pushPayload(_ payload: String, token: String, identifier: Int) throws {
-        return try? self.pushNotification(NWNotification(payload: payload, token: token, identifier: identifier, expiration: nil, priority: 0), type: kNWNotificationType2)!
+    public func pushPayload(_ payload: String, token: String, identifier: Int) throws {
+        /*try self.pushNotification(NWNotification(payload: payload, token: token, identifier: identifier, expiration: nil, priority: 0), type: kNWNotificationType2)!*/
+        //try self.push()
     }
+    
     /** Push a notification using push type for serialization. */
-
     func push(_ notification: NWNotification, type: NWNotificationType) throws {
-        var length: Int = 0
-        var data: Data? = notification.data(with: type)
-        var written: Bool? = try? self.connection.write(data, length: length)
-        if written == nil {
+        var length = 0
+        let data = notification.data(with: type)
+        //try self.connection.write(data, length: length)
+        /*if written == nil {
             return written!
+        }*/
+        if length != data?.count {
+            //try NWErrorUtil.noWithErrorCode(kNWErrorPushWriteFail, reason: length)!
         }
-        if length != data?.length {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorPushWriteFail, reason: length)!
-        }
-        return true
+        //return true
     }
+    
+    /*
     /** @name Reading */
     /** Read back from the server the notification identifiers of failed pushes. */
 

@@ -10,16 +10,15 @@
 
 import Foundation
 
-/*
 /** The current and past data formats supported by APNs. For more information see Apple documentation under 'Legacy Information'. */
-enum NWNotificationType : Int {
+enum NWNotificationType {
     /** The 'Simple Notification Format'. The oldest format, simply concatenates the device token and payload. */
-    case kNWNotificationType0 = 0
-    /** The 'Enhanced Notification Format'. Similar to the previous format, but includes and identifier and expiration date. */
-    case kNWNotificationType1 = 1
+    case kNWNotificationType0
+    /** The 'Enhanced Notification Format'. Similar to the previous format, but includes an identifier and expiration date. */
+    case kNWNotificationType1
     /** The 'Binary Interface and Notification Format'. The latest, more extensible format that allows for attributes like priority. */
-    case kNWNotificationType2 = 2
-}*/
+    case kNWNotificationType2
+}
 
 /** An ARC-friendly replacement of SecIdentityRef. */
 //typealias NWIdentityRef = Any
