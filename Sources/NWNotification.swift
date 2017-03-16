@@ -109,9 +109,9 @@ class NWNotification {
     var priority = 0
     /** Indicates whether the expiration date should be serialized. */
     //var isAddExpiration: Bool = false
+    
     /** @name Initialization */
     /** Create and returns a notification object based on given attribute objects. */
-
     init(payload: String, token: String, identifier: Int, expiration date: Date, priority: Int) {
         //super.init()
         
@@ -138,7 +138,7 @@ class NWNotification {
     
     /** @name Serialization */
     /** Serialize this notification using provided format. */
-    func data(with type: NWNotificationType) -> Data? {
+    func data(with type: NWNotificationType) -> Data {
         switch type {
             case .kNWNotificationType0:
                 return self.dataWithType0()
@@ -147,8 +147,7 @@ class NWNotification {
             case .kNWNotificationType2:
                 return self.dataWithType2()
         }
-
-        return nil
+        return Data()
     }
     
     /** @name Helpers */

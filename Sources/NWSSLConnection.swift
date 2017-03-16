@@ -106,10 +106,11 @@ class NWSSLConnection {
 
         return try? NWErrorUtil.noWithErrorCode(kNWErrorReadFail, reason: status)!
     }
+     */
+    
     /** Write length number of bytes from data object. */
-
     func write(_ data: Data, length: Int) throws {
-        length = 0
+        /*length = 0
         var processed: size_t = 0
         var status: OSStatus = SSLWrite(self.context, data.bytes, data.length, processed)
         length = processed
@@ -126,9 +127,10 @@ class NWSSLConnection {
                 return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteClosedGraceful)!
         }
 
-        return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteFail, reason: status)!
+        return try? NWErrorUtil.noWithErrorCode(kNWErrorWriteFail, reason: status)!*/
     }
-     
+    
+    /*
     convenience init() {
         self.init(host: "", port: 0, identity: nil)
     }*/

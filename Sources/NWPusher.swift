@@ -93,22 +93,17 @@ public class NWPusher {
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
     public func pushPayload(_ payload: String, token: String, identifier: Int) throws {
-        /*try self.pushNotification(NWNotification(payload: payload, token: token, identifier: identifier, expiration: nil, priority: 0), type: kNWNotificationType2)!*/
-        //try self.push()
+        try self.push(NWNotification(payload: payload, token: token, identifier: identifier, expiration: Date(), priority: 0), type: .kNWNotificationType2)
     }
     
     /** Push a notification using push type for serialization. */
     func push(_ notification: NWNotification, type: NWNotificationType) throws {
         var length = 0
         let data = notification.data(with: type)
-        //try self.connection.write(data, length: length)
-        /*if written == nil {
-            return written!
-        }*/
-        if length != data?.count {
+        try self.connection.write(data, length: length)
+        if length != data.count {
             //try NWErrorUtil.noWithErrorCode(kNWErrorPushWriteFail, reason: length)!
         }
-        //return true
     }
     
     /*
