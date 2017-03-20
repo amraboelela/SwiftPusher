@@ -10,7 +10,7 @@
 
 import Foundation
 
-enum NWError: Swift.Error {
+enum NWError: Error {
     /** No error, that's odd. */
     case none
     /** APN processing error. */
