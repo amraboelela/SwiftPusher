@@ -74,7 +74,7 @@ extension Data {
  Read more about this in Apple's documentation under *Provider Communication with Apple Push Notification Service* and *The Notification Payload*.
  */
 class NWNotification {
-    static var notifications = [NWNotification]()
+    static var notifications:[NWNotification] = [NWNotification]()
     
     /** @name Properties */
     /** String representation of serialized JSON. */

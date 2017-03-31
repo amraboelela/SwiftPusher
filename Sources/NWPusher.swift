@@ -37,15 +37,6 @@ public class NWPusher {
     var connection: NWSSLConnection!
     /** @name Initialization */
     
-    /*
-    /** Creates, connects and returns a pusher object based on the provided identity. */
-    class func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) throws -> NWPusher? {
-        var pusher = NWPusher()
-        if identity && try pusher.connect(withIdentity: identity, environment: environment) {
-            return pusher
-        }
-    }*/
-    
     /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
     public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
         let pusher = NWPusher()
@@ -91,6 +82,4 @@ public class NWPusher {
             throw NWError.pushWriteFail
         }
     }
-    
 }
-

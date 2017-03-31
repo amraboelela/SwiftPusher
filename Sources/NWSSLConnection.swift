@@ -58,7 +58,6 @@ class NWSSLConnection {
     
     // MARK: Static methods
     
-    
     /** @name Connecting */
     /** Connect socket, TLS and perform handshake.
      Can also be used when already connected, which will then first disconnect. */
@@ -89,31 +88,6 @@ class NWSSLConnection {
         pSocket?.deallocate(capacity: MemoryLayout<CFSocketNativeHandle>.size)
         pSocket = nil
     }
-    
-    /*
-    /** @name I/O */
-    /** Read length number of bytes into mutable data object. */
-    func read(_ data: Data, length: Int) throws {
-        length = 0
-        var processed: size_t = 0
-        var status: OSStatus = SSLRead(self.context, data.mutableBytes, data.length, processed)
-        length = processed
-        switch status {
-            case errSecSuccess:
-                return true
-            case errSSLWouldBlock:
-                return true
-            case errSecIO:
-                return try? NWErrorUtil.noWithErrorCode(kNWErrorReadDroppedByServer)!
-            case errSSLClosedAbort:
-                return try? NWErrorUtil.noWithErrorCode(kNWErrorReadClosedAbort)!
-            case errSSLClosedGraceful:
-                return try? NWErrorUtil.noWithErrorCode(kNWErrorReadClosedGraceful)!
-        }
-
-        return try? NWErrorUtil.noWithErrorCode(kNWErrorReadFail, reason: status)!
-    }
-     */
     
     /** Write length number of bytes from data object. */
     func write(_ data: Data, length: UnsafeMutablePointer<Int>) throws {
@@ -238,7 +212,7 @@ class NWSSLConnection {
         if SSLSetPeerDomainName(context, self.host.cString, self.host.length) != errSecSuccess {
             throw NWError.SSLPeerDomainName
         }
-        if SSLSetCertificate(context, [self.identity] as? CFArray) != errSecSuccess {
+        if SSLSetCertificate(context, [self.identity] as CFArray) != errSecSuccess {
             throw NWError.SSLCertificate
         }
         self.context = context
