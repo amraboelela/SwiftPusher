@@ -80,7 +80,7 @@ class NWNotification {
     /** String representation of serialized JSON. */
     var payload: String {
         get {
-            return self.payloadData.simpleDescription ?? ""
+            return self.payloadData.simpleDescription 
         }
         set {
             self.payloadData = newValue.data(using: String.Encoding.utf8) ?? Data()
@@ -97,8 +97,8 @@ class NWNotification {
         }
         set {
             let normal = NWNotification.filterHex(newValue)
-            var index64 = normal.index(normal.startIndex, offsetBy: 64)
-            var trunk = normal.length >= 64 ? normal.substring(to: index64) : ""
+            let index64 = normal.index(normal.startIndex, offsetBy: 64)
+            let trunk = normal.length >= 64 ? normal.substring(to: index64) : ""
             self.tokenData = NWNotification.data(fromHex: trunk)
         }
     }

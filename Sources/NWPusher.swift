@@ -48,7 +48,7 @@ public class NWPusher {
     
     /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
     public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
-        var pusher = NWPusher()
+        let pusher = NWPusher()
         do {
             try pusher.connect(withPKCS12Data: data, password: password, isSandbox: isSandbox)
             return pusher
@@ -66,8 +66,8 @@ public class NWPusher {
         }
         self.connection = nil
         let host = isSandbox ? NWPusher.sandboxPushHost : NWPusher.productionPushHost
-        var connection = NWSSLConnection(host: host, port: NWPusher.pushPort, identity: identity)
-        let connected = try connection.connect()
+        let connection = NWSSLConnection(host: host, port: NWPusher.pushPort, identity: identity)
+        try connection.connect()
         self.connection = connection
         //return connected
     }
@@ -78,21 +78,6 @@ public class NWPusher {
             try self.connect(withIdentity: identity, isSandbox: isSandbox)
         }
     }
-    
-    /*
-    /** Reconnect using the same identity, disconnects if necessary. */
-    func reconnect() throws {
-        if !self.connection {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorPushNotConnected)!
-        }
-        return try? self.connection.connect()!
-    }
-    
-    /** Disconnect from the server, allows reconnect. */
-    func disconnect() {
-        self.connection.disconnect()
-        self.connection = nil
-    }*/
     
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
@@ -106,83 +91,6 @@ public class NWPusher {
             throw NWError.pushWriteFail
         }
     }
-    
-    /*
-    /** Push a notification using push type for serialization. */
-    func push(notification: NWNotification) throws {
-        var length = 0
-        let data = notification.data()
-        try self.connection.write(data, length: &length)
-        if length != data.count {
-            throw NWError.pushWriteFail
-        }
-    }*/
-    
-    /*
-    /** @name Reading */
-    /** Read back from the server the notification identifiers of failed pushes. */
-    func readFailedIdentifier(_ identifier: Int, apnError: Error?) throws {
-        identifier = 0
-        var data = Data(length: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
-        var length: Int = 0
-        var read: Bool? = try? self.connection.read(data, length: length)
-        if !length || !read {
-            return read!
-        }
-        var command: UInt8 = 0
-        data.getBytes(command, range: NSRange(location: 0, length: 1))
-        if command != 8 {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorPushResponseCommand, reason: command)!
-        }
-        var status: UInt8 = 0
-        data.getBytes(status, range: NSRange(location: 1, length: 1))
-        var ID: UInt32 = 0
-        data.getBytes(ID, range: NSRange(location: 2, length: 4))
-        identifier = htonl(ID)
-        switch status {
-            case 1:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNProcessing)
-            case 2:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingDeviceToken)
-            case 3:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingTopic)
-            case 4:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingPayload)
-            case 5:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTokenSize)
-            case 6:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTopicSize)
-            case 7:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidPayloadSize)
-            case 8:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTokenContent)
-            case 10:
-                try? NWErrorUtil.noWithErrorCode(kNWErrorAPNShutdown)
-            default:
-                try? NWErrorUtil.noWith(kNWErrorAPNUnknownErrorCode, reason: status)
-        }
-
-        return true
-    }
-    /** Read back multiple notification identifiers of, up to max, failed pushes. */
-
-    func readFailedIdentifierErrorPairs(withMax max: Int, error: Error?) -> [Any] {
-        var pairs: [Any] = []
-        for i in 0..<max {
-            var identifier: Int = 0
-            var apnError: Error? = nil
-            var read: Bool? = try? self.readFailedIdentifier(identifier, apnError: apnError)
-            if read == nil {
-                return nil
-            }
-            if apnError == nil {
-                break
-            }
-            pairs.append([(identifier), apnError])
-        }
-        return pairs
-    }
-    */
     
 }
 
