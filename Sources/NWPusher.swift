@@ -10,6 +10,15 @@
 
 import Foundation
 
+public enum NWPusherError: Error {
+    //case
+    case TerminationStatus(Int)
+    case UnicodeDecodingError(Data)
+    case InvalidEnvironmentVariable(String)
+}
+
+public typealias IdentifierClosure = (Int, Error?) -> Void
+
 /** Serializes notification objects and pushes them to the APNs.
  
  This is the heart of the framework. As the (inconvenient) name suggest, it's also one of the first classes that was added to the framework. This class provides a straightforward interface to the APNs, including connecting, pushing to and reading from the server.
@@ -81,5 +90,68 @@ public class NWPusher {
         if length != data.count {
             throw NWError.pushWriteFail
         }
+    }
+    
+    /** Read back from the server the notification identifiers of failed pushes. */
+    func readFailedIdentifier(callback:IdentifierClosure) throws {
+        identifier = 0
+        var data = Data(length: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
+        var length: Int = 0
+        var read: Bool? = try? self.connection.read(data, length: length)
+        if !length || !read {
+            return read!
+        }
+        var command: UInt8 = 0
+        data.getBytes(command, range: NSRange(location: 0, length: 1))
+        if command != 8 {
+            return try? NWErrorUtil.noWithErrorCode(kNWErrorPushResponseCommand, reason: command)!
+        }
+        var status: UInt8 = 0
+        data.getBytes(status, range: NSRange(location: 1, length: 1))
+        var ID: UInt32 = 0
+        data.getBytes(ID, range: NSRange(location: 2, length: 4))
+        identifier = htonl(ID)
+        switch status {
+        case 1:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNProcessing)
+        case 2:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingDeviceToken)
+        case 3:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingTopic)
+        case 4:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingPayload)
+        case 5:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTokenSize)
+        case 6:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTopicSize)
+        case 7:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidPayloadSize)
+        case 8:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTokenContent)
+        case 10:
+            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNShutdown)
+        default:
+            try? NWErrorUtil.noWith(kNWErrorAPNUnknownErrorCode, reason: status)
+        }
+        
+        return true
+    }
+    
+    /** Read back multiple notification identifiers of, up to max, failed pushes. */
+    func readFailedIdentifierErrorPairs(withMax max: Int, error: Error?) -> [Any] {
+        var pairs: [Any] = []
+        for i in 0..<max {
+            var identifier: Int = 0
+            var apnError: Error? = nil
+            var read: Bool? = try? self.readFailedIdentifier(identifier, apnError: apnError)
+            if read == nil {
+                return nil
+            }
+            if apnError == nil {
+                break
+            }
+            pairs.append([(identifier), apnError])
+        }
+        return pairs
     }
 }
