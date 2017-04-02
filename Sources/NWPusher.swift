@@ -21,9 +21,32 @@ public enum NWPusherError: Error {
     case APNInvalidTokenContent
     case APNShutdown
     case APNUnknownErrorCode
+    
+    init(statusCode: Int) {
+        switch statusCode {
+        case 1:
+            self = .APNProcessing
+        case 2:
+            self = .APNMissingDeviceToken
+        case 3:
+            self = .APNMissingTopic
+        case 4:
+            self = .APNMissingPayload
+        case 5:
+            self = .APNInvalidTokenSize
+        case 6:
+            self = .APNInvalidTopicSize
+        case 7:
+            self = .APNInvalidPayloadSize
+        case 8:
+            self = .APNInvalidTokenContent
+        case 10:
+            self = .APNShutdown
+        default:
+            self = .APNUnknownErrorCode
+        }
+    }
 }
-
-
 
 /** Serializes notification objects and pushes them to the APNs.
  
@@ -46,7 +69,7 @@ public class NWPusher {
     static let productionPushHost = "gateway.push.apple.com"
     static let pushPort = 2195
     
-    var tokenErrorHandler: TokenErrorHandler?
+    var notificationClosure: NotificationClosure?
     
     /** @name Properties */
     /** The SSL connection through which all notifications are pushed. */
@@ -88,8 +111,8 @@ public class NWPusher {
     
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
-    public func send(payload: String, withToken token: String, callback: @escaping TokenErrorHandler) throws {
-        tokenErrorHandler = callback
+    public func send(payload: String, withToken token: String, callback: @escaping NotificationClosure) throws {
+        notificationClosure = callback
         let notification = NWNotification(payload: payload, token: token)
         var length = 0
         let data = notification.data()
@@ -101,7 +124,7 @@ public class NWPusher {
     }
     
     /** Read back from the server the notification identifiers of failed pushes. */
-    func readFailedIdentifier(callback:IdentifierClosure) throws {
+    func readFailedIdentifier(callback:NotificationClosure) throws {
         identifier = 0
         var data = Data(length: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
         var length: Int = 0
@@ -118,8 +141,10 @@ public class NWPusher {
         data.getBytes(status, range: NSRange(location: 1, length: 1))
         var ID: UInt32 = 0
         data.getBytes(ID, range: NSRange(location: 2, length: 4))
-        identifier = htonl(ID)
-        switch status {
+        let identifier = htonl(ID)
+        let notification = NWNotification.notifications[identifier]
+        notification.status =
+        /*switch status {
         case 1:
             try? NWErrorUtil.noWithErrorCode(kNWErrorAPNProcessing)
         case 2:
@@ -140,11 +165,12 @@ public class NWPusher {
             try? NWErrorUtil.noWithErrorCode(kNWErrorAPNShutdown)
         default:
             try? NWErrorUtil.noWith(kNWErrorAPNUnknownErrorCode, reason: status)
-        }
+        }*/
         
         return true
     }
     
+    /*
     /** Read back multiple notification identifiers of, up to max, failed pushes. */
     func readFailedIdentifierErrorPairs(withMax max: Int, error: Error?) -> [Any] {
         var pairs: [Any] = []
@@ -161,5 +187,5 @@ public class NWPusher {
             pairs.append([(identifier), apnError])
         }
         return pairs
-    }
+    }*/
 }
