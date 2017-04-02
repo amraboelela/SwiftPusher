@@ -11,13 +11,19 @@
 import Foundation
 
 public enum NWPusherError: Error {
-    //case
-    case TerminationStatus(Int)
-    case UnicodeDecodingError(Data)
-    case InvalidEnvironmentVariable(String)
+    case APNProcessing
+    case APNMissingDeviceToken
+    case APNMissingTopic
+    case APNMissingPayload
+    case APNInvalidTokenSize
+    case APNInvalidTopicSize
+    case APNInvalidPayloadSize
+    case APNInvalidTokenContent
+    case APNShutdown
+    case APNUnknownErrorCode
 }
 
-public typealias IdentifierClosure = (Int, Error?) -> Void
+
 
 /** Serializes notification objects and pushes them to the APNs.
  
@@ -33,7 +39,8 @@ public typealias IdentifierClosure = (Int, Error?) -> Void
  */
 public class NWPusher {
     
-    public typealias TokenErrorHandler = (_ token: String, _ error: Error?) -> Void
+    public typealias NotificationClosure = (NWNotification) -> Void
+    //public typealias TokenErrorHandler = (_ token: String, _ error: Error?) -> Void
     
     static let sandboxPushHost = "gateway.sandbox.push.apple.com"
     static let productionPushHost = "gateway.push.apple.com"
@@ -81,11 +88,12 @@ public class NWPusher {
     
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
-    public func push(payload: String, withToken token: String, callback: @escaping TokenErrorHandler) throws {
+    public func send(payload: String, withToken token: String, callback: @escaping TokenErrorHandler) throws {
         tokenErrorHandler = callback
         let notification = NWNotification(payload: payload, token: token)
         var length = 0
         let data = notification.data()
+        notification.status = NWNotificationStatus.sent
         try self.connection.write(data, length: &length)
         if length != data.count {
             throw NWError.pushWriteFail

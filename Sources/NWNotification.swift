@@ -63,6 +63,13 @@ extension Data {
     }
 }
 
+enum NWNotificationStatus {
+    case created
+    case sent
+    case pushed
+    case failer(Error)
+}
+
 /** A single push message, containing the receiver device token, the payload, and delivery attributes.
  
  This class represents a single push message, or *remote notification* as Apple calls it. It consists of device token, payload, and some optional attributes. The device token is a unique reference to a single installed app on a single Apple device. The payload is a JSON-formatted string that is delivered into the app. Among app-specific data, this payload contains information on how the device should handle and display this notification.
@@ -73,9 +80,12 @@ extension Data {
  
  Read more about this in Apple's documentation under *Provider Communication with Apple Push Notification Service* and *The Notification Payload*.
  */
-class NWNotification {
-    static var notifications:[NWNotification] = [NWNotification]()
+public class NWNotification {
+    static var notifications:[Int:NWNotification] = [:]
+    static var lastIdentifier = 0
     
+    var status = NWNotificationStatus.created
+
     /** @name Properties */
     /** String representation of serialized JSON. */
     var payload: String {
@@ -132,8 +142,9 @@ class NWNotification {
         
         self.payload = payload
         self.token = token
-        self.identifier = NWNotification.notifications.count
-        NWNotification.notifications.append(self)
+        NWNotification.lastIdentifier += 1
+        self.identifier = NWNotification.lastIdentifier //NWNotification.notifications.count
+        NWNotification.notifications[self.identifier] = self
         self.expiration = date
         self.priority = priority
     
