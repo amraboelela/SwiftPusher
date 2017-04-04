@@ -72,16 +72,23 @@ public class NWPusher {
     
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
-    public func send(payload: String, withToken token: String, callback: @escaping NWNotificationHandler) throws {
+    public func send(payload: String, withToken token: String, callback: @escaping NWNotificationHandler) {
         notificationClosure = callback
         let notification = NWNotification(payload: payload, token: token)
         var length = 0
         let data = notification.data()
         notification.status = NWNotificationStatus.sent
-        try self.connection.write(data, length: &length)
-        if length != data.count {
-            throw NWError.pushWriteFail
+        do {
+            try self.connection.write(data, length: &length)
+            if length != data.count {
+                callback(nil, NWError.pushWriteFail)
+            }
+        } catch {
+            callback(nil, error)
         }
+        //_ = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { _ in
+        self.readFailedIdentifier(callback:callback)
+        //}
     }
     
     /** Read back from the server the notification identifiers of failed pushes. */
