@@ -86,9 +86,9 @@ public class NWPusher {
         } catch {
             callback(nil, error)
         }
-        //_ = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { _ in
-        self.readFailedIdentifier(callback:callback)
-        //}
+        _ = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+            self.readFailedIdentifier(callback:callback)
+        }
     }
     
     /** Read back from the server the notification identifiers of failed pushes. */
