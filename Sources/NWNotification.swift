@@ -59,7 +59,47 @@ extension Data {
         var l: UInt16 = htons(UInt16(length))
         self.append(&i, count: 1)
         self.appendRawBytes(&l, length: 2)
-        self.append(bytes.bindMemory(to: UInt8.self, capacity: length), count: length)
+        self.appendRawBytes(bytes, length: length)
+        //self.append(bytes.bindMemory(to: UInt8.self, capacity: length), count: length)
+    }
+}
+
+public enum NWNotificationError: Error {
+    case APNProcessing
+    case APNMissingDeviceToken
+    case APNMissingTopic
+    case APNMissingPayload
+    case APNInvalidTokenSize
+    case APNInvalidTopicSize
+    case APNInvalidPayloadSize
+    case APNInvalidTokenContent
+    case APNShutdown
+    case APNUnknownErrorCode
+    case PushResponseWithCommand(Int)
+    
+    init(statusCode: Int) {
+        switch statusCode {
+        case 1:
+            self = .APNProcessing
+        case 2:
+            self = .APNMissingDeviceToken
+        case 3:
+            self = .APNMissingTopic
+        case 4:
+            self = .APNMissingPayload
+        case 5:
+            self = .APNInvalidTokenSize
+        case 6:
+            self = .APNInvalidTopicSize
+        case 7:
+            self = .APNInvalidPayloadSize
+        case 8:
+            self = .APNInvalidTokenContent
+        case 10:
+            self = .APNShutdown
+        default:
+            self = .APNUnknownErrorCode
+        }
     }
 }
 
@@ -67,7 +107,7 @@ enum NWNotificationStatus {
     case created
     case sent
     case pushed
-    case failer(Error)
+    case failed(Error)
 }
 
 /** A single push message, containing the receiver device token, the payload, and delivery attributes.
@@ -143,7 +183,7 @@ public class NWNotification {
         self.payload = payload
         self.token = token
         NWNotification.lastIdentifier += 1
-        self.identifier = NWNotification.lastIdentifier //NWNotification.notifications.count
+        self.identifier = NWNotification.lastIdentifier
         NWNotification.notifications[self.identifier] = self
         self.expiration = date
         self.priority = priority

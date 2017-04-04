@@ -89,6 +89,33 @@ class NWSSLConnection {
         pSocket = nil
     }
     
+    /** @name I/O */
+    /** Read length number of bytes into mutable data object. */
+    func read(_ data: Data, length: UnsafeMutablePointer<Int>) throws {
+        var data = data
+        if let context = self.context {
+            try data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> () in
+                let status = SSLRead(context, bytes, data.count, length)
+                switch status {
+                case errSecSuccess:
+                    return
+                case errSSLWouldBlock:
+                    return
+                case errSecIO:
+                    throw NWError.readDroppedByServer
+                case errSSLClosedAbort:
+                    throw NWError.readClosedAbort
+                case errSSLClosedGraceful:
+                    throw NWError.readClosedGraceful
+                default:
+                    throw NWError.readFail
+                }
+            }
+        } else {
+            throw NWError.writeFail
+        }
+    }
+    
     /** Write length number of bytes from data object. */
     func write(_ data: Data, length: UnsafeMutablePointer<Int>) throws {
         if let context = self.context {
@@ -267,7 +294,7 @@ class NWSSLConnection {
 // MARK: - Read Write
 
 func NWSSLRead(connection: SSLConnectionRef, data: UnsafeMutableRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
-    var leng = length.pointee
+    let leng = length.pointee
     length.pointee = 0
     var read = 0
     var rcvd = 0
@@ -297,7 +324,7 @@ func NWSSLRead(connection: SSLConnectionRef, data: UnsafeMutableRawPointer, leng
 }
 
 func NWSSLWrite(connection: SSLConnectionRef, data: UnsafeRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
-    var leng = length.pointee
+    let leng = length.pointee
     length.pointee = 0
     var sent = 0
     var wrtn = 0

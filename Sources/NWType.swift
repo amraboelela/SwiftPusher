@@ -142,4 +142,5 @@ enum NWError: Error {
     /** Keychain does not contain certificate. */
     case KeychainCreateIdentity
     case resolveHostNameError
+    case pushResponseWithCommand(Int)
 }

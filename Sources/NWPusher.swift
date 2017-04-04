@@ -10,44 +10,6 @@
 
 import Foundation
 
-public enum NWPusherError: Error {
-    case APNProcessing
-    case APNMissingDeviceToken
-    case APNMissingTopic
-    case APNMissingPayload
-    case APNInvalidTokenSize
-    case APNInvalidTopicSize
-    case APNInvalidPayloadSize
-    case APNInvalidTokenContent
-    case APNShutdown
-    case APNUnknownErrorCode
-    
-    init(statusCode: Int) {
-        switch statusCode {
-        case 1:
-            self = .APNProcessing
-        case 2:
-            self = .APNMissingDeviceToken
-        case 3:
-            self = .APNMissingTopic
-        case 4:
-            self = .APNMissingPayload
-        case 5:
-            self = .APNInvalidTokenSize
-        case 6:
-            self = .APNInvalidTopicSize
-        case 7:
-            self = .APNInvalidPayloadSize
-        case 8:
-            self = .APNInvalidTokenContent
-        case 10:
-            self = .APNShutdown
-        default:
-            self = .APNUnknownErrorCode
-        }
-    }
-}
-
 /** Serializes notification objects and pushes them to the APNs.
  
  This is the heart of the framework. As the (inconvenient) name suggest, it's also one of the first classes that was added to the framework. This class provides a straightforward interface to the APNs, including connecting, pushing to and reading from the server.
@@ -62,14 +24,13 @@ public enum NWPusherError: Error {
  */
 public class NWPusher {
     
-    public typealias NotificationClosure = (NWNotification) -> Void
-    //public typealias TokenErrorHandler = (_ token: String, _ error: Error?) -> Void
+    public typealias NWNotificationHandler = (NWNotification?, Error?) -> Void
     
     static let sandboxPushHost = "gateway.sandbox.push.apple.com"
     static let productionPushHost = "gateway.push.apple.com"
     static let pushPort = 2195
     
-    var notificationClosure: NotificationClosure?
+    var notificationClosure: NWNotificationHandler?
     
     /** @name Properties */
     /** The SSL connection through which all notifications are pushed. */
@@ -111,7 +72,7 @@ public class NWPusher {
     
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
-    public func send(payload: String, withToken token: String, callback: @escaping NotificationClosure) throws {
+    public func send(payload: String, withToken token: String, callback: @escaping NWNotificationHandler) throws {
         notificationClosure = callback
         let notification = NWNotification(payload: payload, token: token)
         var length = 0
@@ -124,50 +85,62 @@ public class NWPusher {
     }
     
     /** Read back from the server the notification identifiers of failed pushes. */
-    func readFailedIdentifier(callback:NotificationClosure) throws {
-        identifier = 0
-        var data = Data(length: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
-        var length: Int = 0
-        var read: Bool? = try? self.connection.read(data, length: length)
-        if !length || !read {
-            return read!
+    func readFailedIdentifier(callback:NWNotificationHandler) {
+        var data = Data(count: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
+        do {
+            var length = 0
+            try self.connection.read(data, length: &length)
+            if length==0 {
+                callback(nil, NWError.readFail)
+                return
+            }
+        } catch {
+            callback(nil, error)
+            return
         }
-        var command: UInt8 = 0
-        data.getBytes(command, range: NSRange(location: 0, length: 1))
-        if command != 8 {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorPushResponseCommand, reason: command)!
-        }
-        var status: UInt8 = 0
-        data.getBytes(status, range: NSRange(location: 1, length: 1))
-        var ID: UInt32 = 0
-        data.getBytes(ID, range: NSRange(location: 2, length: 4))
-        let identifier = htonl(ID)
-        let notification = NWNotification.notifications[identifier]
-        notification.status =
-        /*switch status {
-        case 1:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNProcessing)
-        case 2:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingDeviceToken)
-        case 3:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingTopic)
-        case 4:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNMissingPayload)
-        case 5:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTokenSize)
-        case 6:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTopicSize)
-        case 7:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidPayloadSize)
-        case 8:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNInvalidTokenContent)
-        case 10:
-            try? NWErrorUtil.noWithErrorCode(kNWErrorAPNShutdown)
-        default:
-            try? NWErrorUtil.noWith(kNWErrorAPNUnknownErrorCode, reason: status)
-        }*/
         
-        return true
+        let commandPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: 1)
+        defer {
+            commandPointer.deinitialize()
+            commandPointer.deallocate(capacity: 1)
+        }
+        data.copyBytes(to: commandPointer, count: 1)
+        let command = commandPointer.pointee
+        
+        if command != 8 {
+            callback(nil, NWError.pushResponseWithCommand(Int(command)))
+            return
+        }
+        
+        let statusPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: 1)
+        defer {
+            statusPointer.deinitialize()
+            statusPointer.deallocate(capacity: 1)
+        }
+        data.copyBytes(to: statusPointer, from: 1..<2)
+        let status = statusPointer.pointee
+        
+        let idPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: 4)
+        defer {
+            idPointer.deinitialize()
+            idPointer.deallocate(capacity: 4)
+        }
+        data.copyBytes(to: idPointer, from: 2..<6)
+        
+        var ID: UInt32 = 0
+        idPointer.withMemoryRebound(to: UInt32.self, capacity: MemoryLayout<UInt32>.size, {
+            ID = $0.pointee
+        })
+        
+        let identifier = Int(htonl(ID))
+        if let notification = NWNotification.notifications[identifier] {
+            if status == 0 {
+                notification.status = .pushed
+            } else {
+                notification.status = .failed(NWNotificationError(statusCode: Int(status)))
+            }
+            callback(notification, nil)
+        }
     }
     
     /*
