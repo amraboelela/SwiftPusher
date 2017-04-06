@@ -28,21 +28,32 @@ public class NWPusher {
     
     public typealias NWNotificationHandler = (NWNotification?, Error?) -> Void
     
-    static let sandboxPushHost = "gateway.sandbox.push.apple.com"
-    static let productionPushHost = "gateway.push.apple.com"
-    static let pushPort = 2195
+    var sandboxHost: String
+    var productionHost: String
+    var port: Int
     
     var notificationClosure: NWNotificationHandler?
     
     /** @name Properties */
     /** The SSL connection through which all notifications are pushed. */
     var connection: NWSSLConnection!
-    /** @name Initialization */
+    var PKCS12Data: Data!
+    var password: String!
+    var isSandbox: Bool!
     
     // MARK: Life cycle
     
-    public init() {
-        
+    init() {
+        sandboxHost = "gateway.sandbox.push.apple.com"
+        productionHost = "gateway.push.apple.com"
+        port = 2195
+    }
+    
+    public convenience init(PKCS12Data data: Data, password: String, isSandbox: Bool) {
+        self.init()
+        PKCS12Data = data
+        self.password = password
+        self.isSandbox = isSandbox
     }
     
     // MARK: Accessors
@@ -51,27 +62,20 @@ public class NWPusher {
         return connection.socket != -1
     }
     
-    /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
-    public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
-        let pusher = NWPusher()
-        do {
-            try pusher.connect(withPKCS12Data: data, password: password, isSandbox: isSandbox)
-            return pusher
-        } catch {
-            print("connect error: \(error)")
-            return nil
-        }
+    // MARK: - Connecting
+    
+    public func connect() throws {
+        try connect(withPKCS12Data: PKCS12Data, password: password, isSandbox: isSandbox)
     }
     
-    /** @name Connecting */
     /** Connect with the APNs using the identity. */
     func connect(withIdentity identity: SecIdentity, isSandbox: Bool) throws {
         if (self.connection != nil) {
             self.connection.disconnect()
         }
         self.connection = nil
-        let host = isSandbox ? NWPusher.sandboxPushHost : NWPusher.productionPushHost
-        let connection = NWSSLConnection(host: host, port: NWPusher.pushPort, identity: identity)
+        let host = isSandbox ? sandboxHost : productionHost
+        let connection = NWSSLConnection(host: host, port: port, identity: identity)
         try connection.connect()
         self.connection = connection
         //return connected
@@ -163,23 +167,4 @@ public class NWPusher {
             callback(notification, nil)
         }
     }
-    
-    /*
-    /** Read back multiple notification identifiers of, up to max, failed pushes. */
-    func readFailedIdentifierErrorPairs(withMax max: Int, error: Error?) -> [Any] {
-        var pairs: [Any] = []
-        for i in 0..<max {
-            var identifier: Int = 0
-            var apnError: Error? = nil
-            var read: Bool? = try? self.readFailedIdentifier(identifier, apnError: apnError)
-            if read == nil {
-                return nil
-            }
-            if apnError == nil {
-                break
-            }
-            pairs.append([(identifier), apnError])
-        }
-        return pairs
-    }*/
 }

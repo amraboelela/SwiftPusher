@@ -18,12 +18,22 @@ import Foundation
  
  Read more in Apple's documentation under *The Feedback Service*.
  */
-class NWPushFeedback: NSObject {
-    /** @name Properties */
-    var connection: NWSSLConnection!
-    /** @name Initialization */
-    /** Setup connection with feedback service based on identity. */
+public class NWPushFeedback: NWPusher {
 
+    public typealias TokenHandler = (String?, Date?, Error?) -> Void
+    
+    // MARK: Life cycle
+    
+    override init() {
+        super.init()
+        sandboxHost = "feedback.sandbox.push.apple.com"
+        productionHost = "feedback.push.apple.com"
+        port = 2196
+    }
+    
+    /*
+     /** Setup connection with feedback service based on identity. */
+     
     class func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) -> Self {
         var feedback = NWPushFeedback()
         return identity && (try? feedback.connect(withIdentity: identity, environment: environment)) ? feedback : nil!
@@ -68,12 +78,13 @@ class NWPushFeedback: NSObject {
     override func disconnect() {
         self.connection.disconnect()
         self.connection = nil
-    }
+    }*/
+    
     /** @name Reading */
+    
     /** Read a single token-date pair, where token is data. */
-
-    func readTokenData(_ token: Data, date: Date) throws {
-        token = nil
+    func read(callback: @escaping TokenHandler) {
+        /*token = nil
         date = nil
         var data = Data(length: MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + NWTokenMaxSize)
         var length: Int = 0
@@ -94,11 +105,12 @@ class NWPushFeedback: NSObject {
             return try? NWErrorUtil.noWithErrorCode(kNWErrorFeedbackTokenLength, reason: tokenLength)!
         }
         token = data.subdata(with: NSRange(location: 6, length: length - 6))
-        return true
+        return true*/
     }
+    
+    /*
     /** Read a single token-date pair, where token is hex string. */
-
-    func readToken(_ token: String, date: Date) throws {
+    func read(token: String, date: Date) throws {
         token = nil
         var data: Data? = nil
         var read: Bool? = try? self.readTokenData(data, date: date)
@@ -109,9 +121,10 @@ class NWPushFeedback: NSObject {
             token = NWNotification.hex(from: data)
         }
         return true
-    }
+    }*/
+    
+    /*
     /** Read all (or max) token-date pairs, where token is hex string. */
-
     func readTokenDatePairs(withMax max: Int, error: Error?) -> [Any] {
         var pairs: [Any] = []
         for i in 0..<max {
@@ -133,9 +146,10 @@ class NWPushFeedback: NSObject {
             }
         }
         return pairs
-    }
+    }*/
+    
     // deprecated
-
+/*
     class func connect(withIdentity identity: NWIdentityRef, error: Error?) -> Self {
         return try? self.connect(withIdentity: identity, environment: NWEnvironmentAuto)!
     }
@@ -150,16 +164,18 @@ class NWPushFeedback: NSObject {
 
     func connect(withPKCS12Data data: Data, password: String, error: Error?) -> Bool {
         return try? self.connect(withPKCS12Data: data, password: password, environment: NWEnvironmentAuto)!
-    }
+    }*/
 
 // MARK: - Connecting
 // MARK: - Reading feedback
 // MARK: - Deprecated
 }
-let NWSandboxPushHost: String = "feedback.sandbox.push.apple.com"
+
+/*let NWSandboxPushHost: String = "feedback.sandbox.push.apple.com"
 
 let NWPushHost: String = "feedback.push.apple.com"
 
 let NWPushPort: Int = 2196
 
 let NWTokenMaxSize: Int = 32
+*/
