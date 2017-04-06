@@ -10,6 +10,8 @@
 
 import Foundation
 
+public let nwpusher = NWPusher()
+
 /** Serializes notification objects and pushes them to the APNs.
  
  This is the heart of the framework. As the (inconvenient) name suggest, it's also one of the first classes that was added to the framework. This class provides a straightforward interface to the APNs, including connecting, pushing to and reading from the server.
@@ -36,6 +38,10 @@ public class NWPusher {
     /** The SSL connection through which all notifications are pushed. */
     var connection: NWSSLConnection!
     /** @name Initialization */
+    
+    public init() {
+        
+    }
     
     /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
     public class func connect(withPKCS12Data data: Data, password: String, isSandbox: Bool) throws -> NWPusher? {
@@ -98,7 +104,7 @@ public class NWPusher {
             var length = 0
             try self.connection.read(data, length: &length)
             if length==0 {
-                callback(nil, NWError.readFail)
+                callback(nil, nil)
                 return
             }
         } catch {
