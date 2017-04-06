@@ -20,7 +20,7 @@ import Foundation
  */
 public class NWPushFeedback: NWPusher {
 
-    public typealias TokenHandler = (String?, Date?, Error?) -> Void
+    public typealias TokenHandler = ([String], Error?) -> Void
     static let tokenMaxSize = 32
     
     // MARK: Life cycle
@@ -36,40 +36,75 @@ public class NWPushFeedback: NWPusher {
     
     /** Read a single token-date pair, where token is data. */
     public func read(callback: @escaping TokenHandler) {
-        var data = Data(count: MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + NWPushFeedback.tokenMaxSize)
-        do {
-            var length = 0
-            try self.connection.read(data, length: &length)
-            if length==0 {
-                callback(nil, nil, nil)
+        var tokens = [String]()
+        let lPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: MemoryLayout<UInt16>.size)
+        defer {
+            lPointer.deinitialize()
+            lPointer.deallocate(capacity: MemoryLayout<UInt16>.size)
+        }
+        let tokenPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: NWPushFeedback.tokenMaxSize)
+        defer {
+            tokenPointer.deinitialize()
+            tokenPointer.deallocate(capacity: NWPushFeedback.tokenMaxSize)
+        }
+        while true {
+            var data = Data(count: MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + NWPushFeedback.tokenMaxSize)
+            do {
+                var length = 0
+                try self.connection.read(data, length: &length)
+                if length==0 {
+                    callback(tokens, nil)
+                    return
+                }
+                if length != data.count {
+                    callback(tokens, NWError.feedbackLengthError)
+                    return
+                }
+            } catch {
+                callback(tokens, error)
                 return
             }
-        } catch {
-            callback(nil, nil, error)
-            return
+
+            data.copyBytes(to: lPointer, from: 4..<6)
+            var l: UInt16 = 0
+            lPointer.withMemoryRebound(to: UInt16.self, capacity: MemoryLayout<UInt16>.size, {
+                l = $0.pointee
+            })
+            let tokenLength = Int(htonl(CUnsignedInt(l)))
+            if tokenLength != NWPushFeedback.tokenMaxSize {
+                callback(tokens, NWError.feedbackTokenLengthError)
+                return
+            }
+
+            data.copyBytes(to: tokenPointer, from: 6..<6+NWPushFeedback.tokenMaxSize)
+            
+            var tokenData = Data()
+            tokenData.append(tokenPointer, count: tokenLength)
+            tokens.append(NWNotification.hex(from: tokenData))
         }
+        
         /*token = nil
-        date = nil
-        var data = Data(length: MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + NWTokenMaxSize)
-        var length: Int = 0
-        var read: Bool? = try? self.connection.read(data, length: length)
-        if !read || length == 0 {
-            return read!
-        }
-        if length != data.length {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorFeedbackLength, reason: length)!
-        }
-        var time: UInt32 = 0
-        data.getBytes(time, range: NSRange(location: 0, length: 4))
-        date = Date(timeIntervalSince1970: htonl(time))
-        var l: UInt16 = 0
-        data.getBytes(l, range: NSRange(location: 4, length: 2))
-        var tokenLength: Int = htons(l)
-        if tokenLength != NWTokenMaxSize {
-            return try? NWErrorUtil.noWithErrorCode(kNWErrorFeedbackTokenLength, reason: tokenLength)!
-        }
-        token = data.subdata(with: NSRange(location: 6, length: length - 6))
-        return true*/
+         date = nil
+         var data = Data(length: MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + NWTokenMaxSize)
+         var length: Int = 0
+         var read: Bool? = try? self.connection.read(data, length: length)
+         if !read || length == 0 {
+         return read!
+         }
+         if length != data.length {
+         return try? NWErrorUtil.noWithErrorCode(kNWErrorFeedbackLength, reason: length)!
+         }
+         var time: UInt32 = 0
+         data.getBytes(time, range: NSRange(location: 0, length: 4))
+         date = Date(timeIntervalSince1970: htonl(time))
+         var l: UInt16 = 0
+         data.getBytes(l, range: NSRange(location: 4, length: 2))
+         var tokenLength: Int = htons(l)
+         if tokenLength != NWTokenMaxSize {
+         return try? NWErrorUtil.noWithErrorCode(kNWErrorFeedbackTokenLength, reason: tokenLength)!
+         }
+         token = data.subdata(with: NSRange(location: 6, length: length - 6))
+         return true*/
     }
     
     /*
@@ -134,12 +169,3 @@ public class NWPushFeedback: NWPusher {
 // MARK: - Reading feedback
 // MARK: - Deprecated
 }
-
-/*let NWSandboxPushHost: String = "feedback.sandbox.push.apple.com"
-
-let NWPushHost: String = "feedback.push.apple.com"
-
-let NWPushPort: Int = 2196
-
-let NWTokenMaxSize: Int = 32
-*/

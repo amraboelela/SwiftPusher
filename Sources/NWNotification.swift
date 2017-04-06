@@ -60,7 +60,6 @@ extension Data {
         self.append(&i, count: 1)
         self.appendRawBytes(&l, length: 2)
         self.appendRawBytes(bytes, length: length)
-        //self.append(bytes.bindMemory(to: UInt8.self, capacity: length), count: length)
     }
 }
 
