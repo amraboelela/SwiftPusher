@@ -21,6 +21,7 @@ import Foundation
 public class NWPushFeedback: NWPusher {
 
     public typealias TokenHandler = (String?, Date?, Error?) -> Void
+    static let tokenMaxSize = 32
     
     // MARK: Life cycle
     
@@ -31,59 +32,22 @@ public class NWPushFeedback: NWPusher {
         port = 2196
     }
     
-    /*
-     /** Setup connection with feedback service based on identity. */
-     
-    class func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) -> Self {
-        var feedback = NWPushFeedback()
-        return identity && (try? feedback.connect(withIdentity: identity, environment: environment)) ? feedback : nil!
-    }
-    /** Setup connection with feedback service based on PKCS #12 data. */
-
-    class func connect(withPKCS12Data data: Data, password: String, environment: NWEnvironment, error: Error?) -> Self {
-        var feedback = NWPushFeedback()
-        return data && (try? feedback.connect(withPKCS12Data: data, password: password, environment: environment)) ? feedback : nil!
-    }
-    /** @name Connecting */
-    /** Connect with feedback service based on identity. */
-
-    func connect(withIdentity identity: NWIdentityRef, environment: NWEnvironment, error: Error?) -> Bool {
-        if self.connection {
-            self.connection.disconnect()
-        }
-        self.connection = nil
-        if environment == NWEnvironmentAuto {
-            environment = NWSecTools.environment(forIdentity: identity)
-        }
-        var host: String = (environment == NWEnvironmentSandbox) ? NWSandboxPushHost : NWPushHost
-        var connection = NWSSLConnection(host: host, port: NWPushPort, identity: identity)
-        var connected: Bool? = try? connection.connect()
-        if connected == nil {
-            return connected!
-        }
-        self.connection = connection
-        return true
-    }
-    /** Connect with feedback service based on PKCS #12 data. */
-
-    func connect(withPKCS12Data data: Data, password: String, environment: NWEnvironment, error: Error?) -> Bool {
-        var identity: NWIdentityRef? = try? NWSecTools.identity(withPKCS12Data: data, password: password)
-        if identity == nil {
-            return false
-        }
-        return try? self.connect(withIdentity: identity, environment: environment)!
-    }
-    /** Disconnect from feedback service. The server will automatically drop the connection after all feedback data has been read. */
-
-    override func disconnect() {
-        self.connection.disconnect()
-        self.connection = nil
-    }*/
-    
     /** @name Reading */
     
     /** Read a single token-date pair, where token is data. */
-    func read(callback: @escaping TokenHandler) {
+    public func read(callback: @escaping TokenHandler) {
+        var data = Data(count: MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + NWPushFeedback.tokenMaxSize)
+        do {
+            var length = 0
+            try self.connection.read(data, length: &length)
+            if length==0 {
+                callback(nil, nil, nil)
+                return
+            }
+        } catch {
+            callback(nil, nil, error)
+            return
+        }
         /*token = nil
         date = nil
         var data = Data(length: MemoryLayout<UInt32>.size + MemoryLayout<UInt16>.size + NWTokenMaxSize)
