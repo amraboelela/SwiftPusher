@@ -39,8 +39,16 @@ public class NWPusher {
     var connection: NWSSLConnection!
     /** @name Initialization */
     
+    // MARK: Life cycle
+    
     public init() {
         
+    }
+    
+    // MARK: Accessors
+    
+    public var isOpen: Bool {
+        return connection.socket != -1
     }
     
     /** Creates, connects and returns a pusher object based on the PKCS #12 data. */
