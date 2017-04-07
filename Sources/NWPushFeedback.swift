@@ -71,6 +71,10 @@ public class NWPushFeedback: NWPusher {
                 l = $0.pointee
             })
             let tokenLength = Int(htonl(CUnsignedInt(l)))
+            if tokenLength == 0 {
+                callback(tokens, nil)
+                return
+            }
             if tokenLength != NWPushFeedback.tokenMaxSize {
                 callback(tokens, NWError.feedbackTokenLengthError)
                 return
