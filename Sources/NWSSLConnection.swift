@@ -112,7 +112,7 @@ class NWSSLConnection {
                 }
             }
         } else {
-            throw NWError.writeFail
+            throw NWError.readFail
         }
     }
     
@@ -329,6 +329,7 @@ func NWSSLWrite(connection: SSLConnectionRef, data: UnsafeRawPointer, length: Un
     var sent = 0
     var wrtn = 0
     let socket = connection.bindMemory(to: CFSocketNativeHandle.self, capacity: MemoryLayout<CFSocketNativeHandle>.size).pointee
+    
     while sent < leng {
         wrtn = write(socket, data + sent, leng - sent)
         if wrtn <= 0 {

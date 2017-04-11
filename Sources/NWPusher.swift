@@ -10,6 +10,16 @@
 
 import Foundation
 
+func DLog(_ message: String, filename: String = #file, function: String = #function, line: Int = #line) {
+    #if DEBUG
+        NSLog("[\(NSString(string: filename).lastPathComponent):\(line)] \(function) - \(message)")
+    #endif
+}
+
+func ALog(_ message: String, filename: String = #file, function: String = #function, line: Int = #line) {
+    NSLog("[\(NSString(string: filename).lastPathComponent):\(line)] \(function) - \(message)")
+}
+
 public let nwpusher = NWPusher()
 
 /** Serializes notification objects and pushes them to the APNs.
@@ -31,8 +41,6 @@ public class NWPusher {
     var sandboxHost: String
     var productionHost: String
     var port: Int
-    
-    var notificationClosure: NWNotificationHandler?
     
     /** @name Properties */
     /** The SSL connection through which all notifications are pushed. */
@@ -91,26 +99,28 @@ public class NWPusher {
     /** @name Pushing */
     /** Push a JSON string payload to a device with token string, assign identifier. */
     public func send(payload: String, withToken token: String, callback: @escaping NWNotificationHandler) {
-        notificationClosure = callback
         let notification = NWNotification(payload: payload, token: token)
         var length = 0
         let data = notification.data()
-        notification.status = NWNotificationStatus.sent
+        notification.status = .sent
         do {
+            ALog("before self.connection.write")
             try self.connection.write(data, length: &length)
+            ALog("after self.connection.write")
             if length != data.count {
+                ALog("length != data.count")
                 callback(nil, NWError.pushWriteFail)
             }
         } catch {
+            ALog("error: \(error)")
             callback(nil, error)
         }
-        _ = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
-            self.readFailedIdentifier(callback:callback)
-        }
+        self.readFailedIdentifier(callback:callback)
     }
     
     /** Read back from the server the notification identifiers of failed pushes. */
     func readFailedIdentifier(callback:NWNotificationHandler) {
+        ALog("1")
         var data = Data(count: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
         do {
             var length = 0
@@ -123,7 +133,6 @@ public class NWPusher {
             callback(nil, error)
             return
         }
-        
         let commandPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: 1)
         defer {
             commandPointer.deinitialize()
