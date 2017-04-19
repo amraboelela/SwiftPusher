@@ -22,7 +22,6 @@ class NWSecTools {
             throw NWError.PKCS12NoItems
         }
         return identities.last
-        return nil
     }
     
     /** Read all identities from a PKCS #12 file (.p12). */
@@ -46,7 +45,6 @@ class NWSecTools {
         try data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> () in
             if let cfdata = CFDataCreate(kCFAllocatorDefault, bytes, data.count) {
                 let options : [String : String] = [kSecImportExportPassphrase as String : password]
-                print("options: \(options)")
                 let status = SecPKCS12Import(cfdata, options as CFDictionary, &items)
                 if status != errSecSuccess || items == nil {
                     throw NWError.PKCS12Error(status)

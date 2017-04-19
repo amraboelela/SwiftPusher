@@ -104,9 +104,8 @@ public class NWPusher {
         let data = notification.data()
         notification.status = .sent
         do {
-            ALog("before self.connection.write")
             try self.connection.write(data, length: &length)
-            ALog("after self.connection.write")
+            //ALog("after self.connection.write")
             if length != data.count {
                 ALog("length != data.count")
                 callback(nil, NWError.pushWriteFail)
@@ -120,7 +119,6 @@ public class NWPusher {
     
     /** Read back from the server the notification identifiers of failed pushes. */
     func readFailedIdentifier(callback:NWNotificationHandler) {
-        ALog("1")
         var data = Data(count: MemoryLayout<UInt8>.size * 2 + MemoryLayout<UInt32>.size)
         do {
             var length = 0
